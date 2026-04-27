@@ -8,7 +8,6 @@ export default defineConfig({
   base: '/gp/',
   define: {
     global: 'window',
-    module: 'undefined',
     'process.env': '{}',
     'process.version': '"v16.0.0"', // 따옴표로 감싸야 정확히 문자열로 치환됩니다.
     'process.versions': '{}',     // node 키를 비워두어 tree-sitter를 속입니다.

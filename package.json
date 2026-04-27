@@ -1,0 +1,35 @@
+{
+  "name": "gp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
+    "isomorphic-git": "^1.37.5",
+    "jszip": "^3.10.1",
+    "mermaid": "^11.4.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-zoom-pan-pinch": "^4.0.3",
+    "stream-browserify": "^3.0.0",
+    "web-tree-sitter": "^0.26.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.5.0",
+    "vite": "^8.0.10"
+  }
+}

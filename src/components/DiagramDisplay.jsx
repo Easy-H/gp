@@ -12,7 +12,7 @@ mermaid.initialize({
   classDiagram: { useMaxWidth: false },
 });
 
-const MermaidDiagramDisplay = ({ classes, layoutDir, showText }) => {
+const MermaidDiagramDisplay = ({ classes, layoutDir, setLayoutDir, showText, setShowText }) => {
   const [mermaidScript, setMermaidScript] = useState('');
   const [isRendering, setIsRendering] = useState(false);
   const mermaidRef = useRef(null);
@@ -79,20 +79,32 @@ const MermaidDiagramDisplay = ({ classes, layoutDir, showText }) => {
   // 툴바 스타일
   const toolbarStyle = {
     position: 'absolute',
-    bottom: '20px',
-    right: '20px',
+    bottom: '24px',
+    right: '24px',
     display: 'flex',
-    gap: '5px',
+    gap: '8px',
+    padding: '6px',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(8px)',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
     zIndex: 20
   };
 
   const btnStyle = {
-    padding: '8px 12px',
+    padding: '8px 14px',
     backgroundColor: '#fff',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
     cursor: 'pointer',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    color: '#475569',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px'
   };
 
   return (
@@ -104,12 +116,73 @@ const MermaidDiagramDisplay = ({ classes, layoutDir, showText }) => {
         .mermaid g.node rect {
           min-width: 100px !important;
         }
+        .diagram-toolbar-btn:hover {
+          background-color: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+          transform: translateY(-1px);
+        }
+        .diagram-header-select {
+          padding: 4px 8px;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+          font-size: 0.8rem;
+          font-weight: 500;
+          color: #334155;
+          outline: none;
+          cursor: pointer;
+        }
+        .diagram-header-btn {
+          padding: 4px 10px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+          background: #fff;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .diagram-header-btn:hover {
+          border-color: #cbd5e1;
+          background: #f8fafc;
+        }
       `}</style>
+
+      {/* Diagram Header Controls */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        backgroundColor: '#fff',
+        border: '1px solid #e2e8f0',
+        borderBottom: 'none',
+        borderRadius: '12px 12px 0 0',
+        gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <label style={{ fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Layout</label>
+          <select 
+            className="diagram-header-select"
+            value={layoutDir} 
+            onChange={(e) => setLayoutDir(e.target.value)}
+          >
+            <option value="TB">상하 (TB)</option>
+            <option value="LR">좌우 (LR)</option>
+            <option value="BT">하상 (BT)</option>
+            <option value="RL">우좌 (RL)</option>
+          </select>
+        </div>
+        <button className="diagram-header-btn" onClick={() => setShowText(!showText)}>
+          {showText ? '📜 텍스트 숨기기' : '📜 텍스트 보기'}
+        </button>
+      </div>
+
       {showText && (
         <div style={{ width: '100%', display: 'flex'}}>
           <textarea
             rows="10"
-            style={{ flex: 1, padding: '10px', fontFamily: 'monospace', backgroundColor: '#fff', border: '2px solid #fff9c4' }}
+            style={{ flex: 1, padding: '16px', fontFamily: 'monospace', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', marginBottom: '10px', fontSize: '13px', color: '#334155' }}
             value={mermaidScript}
             onChange={(e) => setMermaidScript(e.target.value)}
             placeholder="Mermaid 스크립트 디버깅용..."
@@ -118,12 +191,16 @@ const MermaidDiagramDisplay = ({ classes, layoutDir, showText }) => {
       )}
       <div 
         style={{ 
-          border: '1px solid #ddd', 
-          background: '#f9f9f9',
+          border: '1px solid #e2e8f0',
+          background: '#f8fafc',
+          backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
           overflow: 'hidden', // 줌 기능을 위해 내부 스크롤 대신 hidden 사용
           width: '100%',
-          height: '500px', // 높이를 500px로 완전히 고정합니다.
-          position: 'relative'
+          height: '500px', // 시각적 확보를 위해 높이를 약간 늘림
+          position: 'relative',
+          borderRadius: '0 0 12px 12px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
         }}
       >
         <TransformWrapper
@@ -142,24 +219,28 @@ const MermaidDiagramDisplay = ({ classes, layoutDir, showText }) => {
           {({ zoomIn, zoomOut, resetTransform }) => (
             <>
               <div style={toolbarStyle}>
-                <button style={btnStyle} onClick={() => zoomIn()}>확대 (+)</button>
-                <button style={btnStyle} onClick={() => zoomOut()}>축소 (-)</button>
-                <button style={btnStyle} onClick={() => resetTransform()}>초기화 (1:1)</button>
-                <button style={btnStyle} onClick={() => {
+                <button className="diagram-toolbar-btn" style={btnStyle} onClick={() => zoomIn()}><span>➕</span> 확대</button>
+                <button className="diagram-toolbar-btn" style={btnStyle} onClick={() => zoomOut()}><span>➖</span> 축소</button>
+                <button className="diagram-toolbar-btn" style={btnStyle} onClick={() => resetTransform()}><span>🔄</span> 리셋</button>
+                <button className="diagram-toolbar-btn" style={btnStyle} onClick={() => {
                   const svg = mermaidRef.current.querySelector('svg');
                   if (svg) transformComponentRef.current.zoomToElement(svg);
-                }}>전체 보기</button>
+                }}><span>🔍</span> 맞춤</button>
               </div>
               
               {isRendering && (
                 <div style={{
                   position: 'absolute',
                   top: 0, left: 0, right: 0, bottom: 0,
-                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                  backdropFilter: 'blur(2px)',
                   display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  zIndex: 10, fontWeight: 'bold', color: '#007bff'
+                  zIndex: 10, fontWeight: '700', color: '#3b82f6',
+                  borderRadius: '12px'
                 }}>
-                  다이어그램 렌더링 중...
+                  <div style={{ padding: '12px 24px', backgroundColor: '#fff', borderRadius: '30px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+                    다이어그램 생성 중...
+                  </div>
                 </div>
               )}
 

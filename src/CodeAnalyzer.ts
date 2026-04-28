@@ -22,6 +22,7 @@ export interface ClassInfo {
   methods: MemberInfo[];
   fields: MemberInfo[];
   associations: AssociationInfo[];
+  children: string[]; // 자신을 상속/구현하는 클래스 목록
 }
 
 export class CodeAnalyzer {
@@ -37,7 +38,7 @@ export class CodeAnalyzer {
     try {
       await Parser.init({
         locateFile: (scriptName: string) => {
-          const baseUrl = import.meta.env.BASE_URL;
+          const baseUrl = (import.meta as any).env.BASE_URL;
           if (scriptName === 'tree-sitter.wasm') {
             return `${baseUrl}web-tree-sitter.wasm`;
           }
@@ -58,7 +59,7 @@ export class CodeAnalyzer {
     if (this.loadedLanguages.has(config.name)) return config;
 
     try {
-      const baseUrl = import.meta.env.BASE_URL;
+      const baseUrl = (import.meta as any).env.BASE_URL;
       const Lang = await TreeSitter.Language.load(`${baseUrl}tree-sitter-${config.wasm}.wasm`);
       this.loadedLanguages.set(config.name, Lang);
       return config;
@@ -210,7 +211,8 @@ export class CodeAnalyzer {
           const classInfo: ClassInfo = {
             name: nameNode.text.split('.').pop()!.replace(/[<>[\];{}]/g, '').trim(),
             type: node.type.includes('interface') ? 'interface' : 'class',
-            parents: [], implements: [], methods: [], fields: [], associations: []
+            parents: [], implements: [], methods: [], fields: [], associations: [],
+            children: []
           };
           for (let i = 0; i < node.childCount; i++) {
             const child = node.child(i);

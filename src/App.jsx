@@ -44,9 +44,16 @@ const App = () => {
         const metadata = analyzer.extractClassMetadata(SAMPLE_CODE, 'js');
         const classes = analyzer.analyze(SAMPLE_CODE, 'js', metadata);
 
+        // 파일 경로 및 소스 코드 정보 포함
+        const enriched = classes.map(cls => ({
+          ...cls,
+          filePath: 'sample.js',
+          fileContent: SAMPLE_CODE
+        }));
+
         // 중복 및 Anonymous 필터링 적용
         const filtered = Array.from(
-          classes.reduce((map, obj) => (obj.name !== 'Anonymous' ? map.set(obj.name, obj) : map), new Map()).values()
+          enriched.reduce((map, obj) => (obj.name !== 'Anonymous' ? map.set(obj.name, obj) : map), new Map()).values()
         );
         setCurrentClasses(refineClasses(filtered, metadata));
         setShowAnalysisModal(false); // 분석 완료 시 모달 닫기
@@ -72,9 +79,16 @@ const App = () => {
         const metadata = analyzer.extractClassMetadata(code, extension);
         const classes = analyzer.analyze(code, extension, metadata);
 
+        // 파일 경로 및 소스 코드 정보 포함
+        const enriched = classes.map(cls => ({
+          ...cls,
+          filePath: `input.${extension}`,
+          fileContent: code
+        }));
+
         // 중복 및 Anonymous 필터링 적용
         const filtered = Array.from(
-          classes.reduce((map, obj) => (obj.name !== 'Anonymous' ? map.set(obj.name, obj) : map), new Map()).values()
+          enriched.reduce((map, obj) => (obj.name !== 'Anonymous' ? map.set(obj.name, obj) : map), new Map()).values()
         );
         setCurrentClasses(refineClasses(filtered, metadata));
         setShowAnalysisModal(false); // 분석 완료 시 모달 닫기
@@ -99,7 +113,13 @@ const App = () => {
     for (const [path, data] of projectMap.entries()) {
       try {
         const classes = analyzer.analyze(data.content, data.ext, metadata);
-        allParsedClasses = [...allParsedClasses, ...classes];
+        // 분석된 클래스에 소스 파일 정보와 컨텐츠를 매핑
+        const enriched = classes.map(cls => ({
+          ...cls,
+          filePath: path,
+          fileContent: data.content
+        }));
+        allParsedClasses = [...allParsedClasses, ...enriched];
       } catch (e) {
         console.warn(`Analysis failed for ${path}`, e);
       }
@@ -373,30 +393,33 @@ const App = () => {
             .dashboard-container {
               display: flex;
               flex-direction: column;
-              gap: 20px;
+              gap: 32px;
             }
             .class-detail-card {
-              max-height: none;
-              overflow-y: visible;
+              display: flex;
+              flex-direction: column;
+            }
+            /* 내부 컴포넌트(상세보기, 다이어그램)를 위한 반응형 그리드 클래스 */
+            .internal-split-layout {
+              display: flex;
+              flex-direction: column;
             }
             @media (min-width: 1024px) {
-              .dashboard-container {
+              .internal-split-layout {
                 flex-direction: row;
-                align-items: flex-start;
+                align-items: stretch;
               }
-              .detail-pane {
+              .internal-split-layout > * {
                 flex: 1;
                 min-width: 0;
-                position: sticky;
-                top: 24px;
               }
               .class-detail-card {
-                max-height: calc(100vh - 160px);
-                overflow-y: auto;
+                height: 750px; /* 고정 높이 부여 */
+                max-height: calc(100vh - 160px); /* 화면 높이보다 작게 제한 */
+                overflow: hidden; /* 내부 영역에서 개별 스크롤 처리 */
               }
-              .diagram-pane {
-                flex: 1.5;
-                min-width: 0;
+              .detail-pane, .diagram-pane {
+                width: 100%;
               }
             }
           `}</style>
@@ -425,26 +448,26 @@ const App = () => {
               />
             </div>
           </div>
-        </div>
 
-        {/* 내보내기 옵션 모달 */}
-        {showExportModal && (
-          <Modal onClose={() => setShowExportModal(false)}>
-            <div style={{ padding: '30px', textAlign: 'center' }}>
-              <h3 style={{ marginTop: 0, color: '#0f172a', fontWeight: '800' }}>다이어그램 내보내기</h3>
-              <p style={{ color: '#64748b', marginBottom: '24px' }}>원하는 파일 형식을 선택하여 저장하세요.</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <button className='secondary-btn' onClick={() => { exportData('mmd'); setShowExportModal(false); }}>Mermaid (.mmd)</button>
-                <button className='secondary-btn' onClick={() => { handlePngExport(); setShowExportModal(false); }}>이미지 (.png)</button>
-                <button className='secondary-btn' onClick={() => { exportData('puml'); setShowExportModal(false); }}>PlantUML (.puml)</button>
-                <button className='secondary-btn' onClick={() => { exportData('dot'); setShowExportModal(false); }}>Graphviz (.dot)</button>
+          {/* 내보내기 옵션 모달 */}
+          {showExportModal && (
+            <Modal onClose={() => setShowExportModal(false)}>
+              <div style={{ padding: '30px', textAlign: 'center' }}>
+                <h3 style={{ marginTop: 0, color: '#0f172a', fontWeight: '800' }}>다이어그램 내보내기</h3>
+                <p style={{ color: '#64748b', marginBottom: '24px' }}>원하는 파일 형식을 선택하여 저장하세요.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <button className='secondary-btn' onClick={() => { exportData('mmd'); setShowExportModal(false); }}>Mermaid (.mmd)</button>
+                  <button className='secondary-btn' onClick={() => { handlePngExport(); setShowExportModal(false); }}>이미지 (.png)</button>
+                  <button className='secondary-btn' onClick={() => { exportData('puml'); setShowExportModal(false); }}>PlantUML (.puml)</button>
+                  <button className='secondary-btn' onClick={() => { exportData('dot'); setShowExportModal(false); }}>Graphviz (.dot)</button>
+                </div>
               </div>
-            </div>
-          </Modal>
-        )}
+            </Modal>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default App;
+      export default App;

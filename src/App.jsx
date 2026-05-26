@@ -21,6 +21,7 @@ const App = () => {
   const [currentClasses, setCurrentClasses] = useState([]); // 현재 분석된 클래스 목록 저장
   const [extension, setExtension] = useState('js'); // 기본 언어 설정
   const [layoutDir, setLayoutDir] = useState('TB'); // 레이아웃 방향 상태 (TB 또는 LR)
+  const [maxTextSize, setMaxTextSize] = useState(50000); // Mermaid 최대 텍스트 크기 설정
   const [gitUrl, setGitUrl] = useState(''); // 원격 Git URL 상태
   const [activeTab, setActiveTab] = useState('input'); // 'input', 'zip', 'git'
   const [isProcessing, setIsProcessing] = useState(false);
@@ -445,6 +446,9 @@ const App = () => {
                 setLayoutDir={setLayoutDir}
                 showText={showText}
                 setShowText={setShowText}
+                selectedClassName={selectedClassName}
+                maxTextSize={maxTextSize}
+                setMaxTextSize={setMaxTextSize}
               />
             </div>
           </div>

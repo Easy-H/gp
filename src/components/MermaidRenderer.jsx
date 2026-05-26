@@ -2,18 +2,22 @@ import React, { useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose',
-  useMaxWidth: false,
-  class: { useMaxWidth: false },
-  classDiagram: { useMaxWidth: false },
-});
-
-const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering }) => {
+const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering, selectedClassName, maxTextSize }) => {
   const mermaidRef = useRef(null);
   const transformComponentRef = useRef(null);
+
+  // maxTextSize가 변경될 때마다 Mermaid 재설정
+  useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      securityLevel: 'loose',
+      maxTextSize: maxTextSize || 500000,
+      useMaxWidth: false,
+      class: { useMaxWidth: false },
+      classDiagram: { useMaxWidth: false },
+    });
+  }, [maxTextSize]);
 
   useEffect(() => {
     const renderMermaid = async () => {
@@ -56,6 +60,31 @@ const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering }) => {
     };
     renderMermaid();
   }, [mermaidScript, setIsRendering]);
+
+  // 특정 클래스가 선택되었을 때 해당 위치로 이동 및 확대
+  useEffect(() => {
+    if (!isRendering && selectedClassName && mermaidRef.current) {
+      const svg = mermaidRef.current.querySelector('svg');
+      if (svg) {
+        // Mermaid 클래스 다이어그램에서 노드는 보통 .node 클래스를 가짐
+        const nodes = Array.from(svg.querySelectorAll('.node'));
+        
+        // 클래스 이름을 포함하는 텍스트 요소를 가진 노드 찾기
+        const targetNode = nodes.find(node => {
+          const labels = Array.from(node.querySelectorAll('text, .classTitle'));
+          return labels.some(label => label.textContent.trim() === selectedClassName);
+        });
+
+        if (targetNode) {
+          // 해당 요소로 이동 (scale을 조절하여 적절히 확대 가능)
+          setTimeout(() => {
+            // zoomToElement(node, scale, animationTime)
+            transformComponentRef.current?.zoomToElement(targetNode, 1.2, 500);
+          }, 50);
+        }
+      }
+    }
+  }, [selectedClassName, isRendering]);
 
   const toolbarStyle = {
     position: 'absolute',

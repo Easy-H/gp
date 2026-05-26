@@ -1,4 +1,4 @@
-# GP
+# Notation
 
 ## 기술
 

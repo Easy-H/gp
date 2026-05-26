@@ -5,7 +5,7 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/gp/',
+  base: '/notation/',
   define: {
     'global': 'window',
     'process.env.NODE_ENV': JSON.stringify('production'),

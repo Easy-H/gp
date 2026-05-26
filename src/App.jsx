@@ -338,7 +338,7 @@ const App = () => {
           marginBottom: '6px'
         }}>
           <div style={{ fontSize: '1.75rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ color: '#3b82f6', letterSpacing: '-0.02em' }}>GP</span>
+            <span style={{ color: '#3b82f6', letterSpacing: '-0.02em' }}>Notation</span>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button

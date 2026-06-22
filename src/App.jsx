@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { CodeAnalyzer } from './CodeAnalyzer';
-import { ProjectExtractor } from './services/ProjectExtractor';
-import { toMermaid, toPlantUML, toDOT } from './Exporter';
 
 // 분리된 컴포넌트들
 import TabMenu from './components/TabMenu';
@@ -14,52 +12,71 @@ import ClassSearch from './components/ClassSearch';
 import Modal from './components/Modal';
 import ClassDetailView from './components/ClassDetailView';
 import { SAMPLE_CODE } from './constants/SampleCode';
+import { useAppCoreState } from './hooks/useAppCoreState';
+import { useClassSelection } from './hooks/useClassSelection';
+import { useAppUiState } from './hooks/useAppUiState';
+import { useProjectAnalysis } from './hooks/useProjectAnalysis';
+import { useExportActions } from './hooks/useExportActions';
 
 const App = () => {
-  const [code, setCode] = useState('');
-  const [analyzer, setAnalyzer] = useState(null);
-  const [currentClasses, setCurrentClasses] = useState([]); // 현재 분석된 클래스 목록 저장
-  const [extension, setExtension] = useState('js'); // 기본 언어 설정
-  const [layoutDir, setLayoutDir] = useState('TB'); // 레이아웃 방향 상태 (TB 또는 LR)
-  const [maxTextSize, setMaxTextSize] = useState(50000); // Mermaid 최대 텍스트 크기 설정
-  const [gitUrl, setGitUrl] = useState(''); // 원격 Git URL 상태
-  const [activeTab, setActiveTab] = useState('input'); // 'input', 'zip', 'git'
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showText, setShowText] = useState(false); // Mermaid 텍스트 표시 여부
-  const [showAnalysisModal, setShowAnalysisModal] = useState(true); // 분석 입력 모달 표시 여부 (기본 true)
-  const [showExportModal, setShowExportModal] = useState(false); // 내보내기 모달 표시 여부
-  const [selectedClassName, setSelectedClassName] = useState(null); // 현재 선택된 상세 보기 클래스
-  const [navigationHistory, setNavigationHistory] = useState([]); // 내비게이션 히스토리 스택
-  const [processingStatus, setProcessingStatus] = useState({
-    current: 0,
-    total: 0,
-    fileName: ''
+  const {
+    code,
+    setCode,
+    analyzer,
+    setAnalyzer,
+  } = useAppCoreState();
+  const {
+    extension,
+    setExtension,
+    layoutDir,
+    setLayoutDir,
+    maxTextSize,
+    setMaxTextSize,
+    gitUrl,
+    setGitUrl,
+    activeTab,
+    setActiveTab,
+    showText,
+    setShowText,
+    showAnalysisModal,
+    setShowAnalysisModal,
+    showExportModal,
+    setShowExportModal,
+  } = useAppUiState();
+
+  const {
+    selectedClassName,
+    navigationHistory,
+    handleSelectClass,
+    handleGoBack,
+  } = useClassSelection();
+
+  const {
+    currentClasses,
+    isProcessing,
+    processingStatus,
+    loadSample,
+    handleAnalyze,
+    handleZipUpload,
+    handleRemoteGitAnalysis,
+    handleGitDirectoryAnalysis,
+    handleUpdateClass,
+  } = useProjectAnalysis({
+    code,
+    extension,
+    analyzer,
+    setShowAnalysisModal,
   });
 
-  const loadSample = () => {
+  const { exportData, handlePngExport } = useExportActions({
+    currentClasses,
+    layoutDir,
+    onAlert: (message) => alert(message),
+  });
+
+  const handleLoadSample = () => {
     setCode(SAMPLE_CODE);
-    // 샘플 로드 후 즉시 분석 시도 (analyzer가 있을 때만)
-    if (analyzer) {
-      // 샘플은 JS이므로 JS 언어팩 로드 확인 후 분석
-      analyzer.loadLanguage('js').then(() => {
-        const metadata = analyzer.extractClassMetadata(SAMPLE_CODE, 'js');
-        const classes = analyzer.analyze(SAMPLE_CODE, 'js', metadata);
-
-        // 파일 경로 및 소스 코드 정보 포함
-        const enriched = classes.map(cls => ({
-          ...cls,
-          filePath: 'sample.js',
-          fileContent: SAMPLE_CODE
-        }));
-
-        // 중복 및 Anonymous 필터링 적용
-        const filtered = Array.from(
-          enriched.reduce((map, obj) => (obj.name !== 'Anonymous' ? map.set(obj.name, obj) : map), new Map()).values()
-        );
-        setCurrentClasses(refineClasses(filtered, metadata));
-        setShowAnalysisModal(false); // 분석 완료 시 모달 닫기
-      });
-    }
+    void loadSample(SAMPLE_CODE);
   };
 
   // 분석기 초기화
@@ -72,222 +89,12 @@ const App = () => {
     initAnalyzer();
   }, []);
 
-  // 분석 실행
-  const handleAnalyze = () => {
-    if (!analyzer || !code) return;
-    analyzer.loadLanguage(extension).then(() => {
-      try {
-        const metadata = analyzer.extractClassMetadata(code, extension);
-        const classes = analyzer.analyze(code, extension, metadata);
-
-        // 파일 경로 및 소스 코드 정보 포함
-        const enriched = classes.map(cls => ({
-          ...cls,
-          filePath: `input.${extension}`,
-          fileContent: code
-        }));
-
-        // 중복 및 Anonymous 필터링 적용
-        const filtered = Array.from(
-          enriched.reduce((map, obj) => (obj.name !== 'Anonymous' ? map.set(obj.name, obj) : map), new Map()).values()
-        );
-        setCurrentClasses(refineClasses(filtered, metadata));
-        setShowAnalysisModal(false); // 분석 완료 시 모달 닫기
-        alert("코드 분석이 완료되었습니다.");
-      } catch (err) {
-        console.error("Analysis failed:", err);
-        alert("코드 분석 중 오류가 발생했습니다.");
-      }
-    });
-  };
-
   // 언어 선택 변경 시 미리 로드 (UX 최적화)
   useEffect(() => {
     if (analyzer && activeTab === 'input') {
       analyzer.loadLanguage(extension);
     }
   }, [extension, analyzer, activeTab]);
-
-  // 공통 분석 파이프라인 로직 (Stage 2 & 3)
-  const runAnalysisPipeline = (projectMap, metadata) => {
-    let allParsedClasses = [];
-    for (const [path, data] of projectMap.entries()) {
-      try {
-        const classes = analyzer.analyze(data.content, data.ext, metadata);
-        // 분석된 클래스에 소스 파일 정보와 컨텐츠를 매핑
-        const enriched = classes.map(cls => ({
-          ...cls,
-          filePath: path,
-          fileContent: data.content
-        }));
-        allParsedClasses = [...allParsedClasses, ...enriched];
-      } catch (e) {
-        console.warn(`Analysis failed for ${path}`, e);
-      }
-    }
-    const uniqueClasses = Array.from(
-      allParsedClasses.reduce((map, obj) => (obj.name !== 'Anonymous' ? map.set(obj.name, obj) : map), new Map()).values()
-    );
-    setCurrentClasses(refineClasses(uniqueClasses, metadata));
-    setShowAnalysisModal(false); // 분석 완료 시 모달 닫기
-  };
-
-  // 분석 결과 후처리: 타입 교정 및 자손 클래스 맵핑
-  const refineClasses = (classes, metadataMap) => {
-    const classMap = new Map(classes.map(c => [c.name, c]));
-
-    // 1. 타입 기반 관계 교정 (상속 -> 구현)
-    classes.forEach(cls => {
-      const correctedParents = [];
-      cls.parents.forEach(pName => {
-        if (metadataMap.get(pName) === 'interface') {
-          if (!cls.implements.includes(pName)) cls.implements.push(pName);
-        } else {
-          correctedParents.push(pName);
-        }
-      });
-      cls.parents = correctedParents;
-      cls.children = []; // 초기화
-    });
-
-    // 2. 자손 클래스(Children) 정보 수집
-    classes.forEach(cls => {
-      const allBaseTypes = [...cls.parents, ...cls.implements];
-      allBaseTypes.forEach(baseName => {
-        const baseClass = classMap.get(baseName);
-        if (baseClass) {
-          if (!baseClass.children.includes(cls.name)) {
-            baseClass.children.push(cls.name);
-          }
-        }
-      });
-    });
-
-    return [...classes];
-  };
-
-  // 파일 업로드 핸들러
-  const handleZipUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file || !analyzer) return;
-    try {
-      setIsProcessing(true);
-      const extractor = new ProjectExtractor();
-      const { projectMap, metadata } = await extractor.fromZip(file, analyzer, setProcessingStatus);
-      runAnalysisPipeline(projectMap, metadata);
-    } catch (err) {
-      alert(`Zip 분석 실패: ${err.message}`);
-    } finally {
-      setIsProcessing(false);
-      event.target.value = '';
-    }
-  };
-
-  // 원격 Git 저장소 클론 및 분석 핸들러
-  const handleRemoteGitAnalysis = async (url) => {
-    try {
-      setIsProcessing(true);
-      const extractor = new ProjectExtractor();
-      const { projectMap, metadata } = await extractor.fromRemoteGit(url, analyzer, setProcessingStatus);
-      runAnalysisPipeline(projectMap, metadata);
-    } catch (err) {
-      alert(`원격 Git 분석 실패: ${err.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // 로컬 .git 폴더 또는 폴더 선택 분석 핸들러
-  const handleGitDirectoryAnalysis = async (files) => {
-    try {
-      setIsProcessing(true);
-      const extractor = new ProjectExtractor();
-      const { projectMap, metadata } = await extractor.fromLocalGit(files, analyzer, setProcessingStatus);
-      runAnalysisPipeline(projectMap, metadata);
-    } catch (err) {
-      alert(`로컬 Git 분석 실패: ${err.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // 클래스 선택 및 히스토리 관리
-  const handleSelectClass = (name) => {
-    if (name === null) {
-      setSelectedClassName(null);
-      setNavigationHistory([]); // 닫을 때 히스토리 초기화
-      return;
-    }
-
-    // 현재 보고 있는 클래스가 있다면 히스토리에 추가 (중복 이동 방지)
-    if (selectedClassName && selectedClassName !== name) {
-      setNavigationHistory(prev => [...prev, selectedClassName]);
-    }
-    setSelectedClassName(name);
-  };
-
-  // 뒤로 가기 수행
-  const handleGoBack = () => {
-    if (navigationHistory.length === 0) return;
-    const newHistory = [...navigationHistory];
-    const prevClass = newHistory.pop();
-    setNavigationHistory(newHistory);
-    setSelectedClassName(prevClass);
-  };
-
-  // 클래스 정보 수정 시 상태 업데이트
-  const handleUpdateClass = (updatedClass) => {
-    setCurrentClasses(prev => prev.map(cls =>
-      cls.name === updatedClass.name ? updatedClass : cls
-    ));
-  };
-
-  const exportData = (type) => {
-    if (!currentClasses || currentClasses.length === 0) {
-      alert("먼저 분석을 진행해주세요.");
-      return;
-    }
-    if (type === 'mmd') downloadFile(toMermaid(currentClasses, layoutDir), 'diagram.mmd');
-    if (type === 'puml') downloadFile(toPlantUML(currentClasses, layoutDir), 'diagram.puml');
-    if (type === 'dot') downloadFile(toDOT(currentClasses), 'diagram.dot');
-  };
-
-  // PNG 내보내기 구현
-  const handlePngExport = () => {
-    const svg = document.querySelector('.mermaid svg');
-    if (!svg) {
-      alert("다이어그램이 렌더링되지 않았습니다.");
-      return;
-    }
-    const canvas = document.createElement('canvas');
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-    const img = new Image();
-
-    img.onload = () => {
-      canvas.width = img.width + 40;
-      canvas.height = img.height + 40;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 20, 20);
-      const pngUrl = canvas.toDataURL('image/png');
-      downloadFile(null, 'diagram.png', pngUrl);
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
-  };
-
-  // 공통 다운로드 함수 (URL 직접 지원 추가)
-  const downloadFile = (content, filename, urlOverride = null) => {
-    const url = urlOverride || URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    if (!urlOverride) URL.revokeObjectURL(url);
-  };
 
   return (
     <div style={{ padding: '0 2rem 2rem 2rem', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
@@ -380,7 +187,7 @@ const App = () => {
                   <CodeInput
                     extension={extension} setExtension={setExtension}
                     code={code} setCode={setCode}
-                    onAnalyze={handleAnalyze} onLoadSample={loadSample}
+                    onAnalyze={() => handleAnalyze(code, extension)} onLoadSample={handleLoadSample}
                   />
                 )}
               </div>

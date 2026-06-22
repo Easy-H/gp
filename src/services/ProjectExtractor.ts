@@ -3,23 +3,24 @@ import crypto from 'crypto';
 import JSZip from 'jszip';
 import git from 'isomorphic-git';
 import http from 'isomorphic-git/http/web';
+import type { CodeAnalyzer } from '../CodeAnalyzer';
 
 // 브라우저 환경에서 isomorphic-git이 요구하는 Buffer 전역 객체 폴리필
 if (typeof window !== 'undefined' && !window.Buffer) { 
-  (window as any).Buffer = Buffer;
+  (window as Window & typeof globalThis & { Buffer?: typeof Buffer }).Buffer = Buffer;
 }
 
 // isomorphic-git이 요구하는 Node.js crypto.createHash 폴리필
 if (typeof window !== 'undefined') {
-  const win = window as any;
+  const win = window as Window & typeof globalThis & { crypto?: Crypto & { createHash?: typeof crypto.createHash } };
   if (!win.crypto) {
     win.crypto = crypto;
   } else if (!win.crypto.createHash) {
-    try { win.crypto.createHash = crypto.createHash; } catch (e) { /* 읽기 전용인 경우 무시 */ }
+    try { win.crypto.createHash = crypto.createHash; } catch {
+      /* 읽기 전용인 경우 무시 */
+    }
   }
 }
-
-import { CodeAnalyzer } from '../CodeAnalyzer';
 
 export interface ExtractedFile {
   content: string;
@@ -36,6 +37,109 @@ export interface ProgressInfo {
   total: number;
   fileName: string;
 }
+
+interface FileStat {
+  mode: number;
+  size: number;
+  mtimeMs?: number;
+  isDirectory(): boolean;
+  isFile(): boolean;
+}
+
+interface VirtualFileSystem {
+  promises: VirtualFileSystem;
+  writeFile(path: string, data: Uint8Array): Promise<void>;
+  readFile(path: string): Promise<Uint8Array>;
+  mkdir(path: string): Promise<void>;
+  rmdir(path: string): Promise<void>;
+  unlink(path: string): Promise<void>;
+  readdir(path: string): Promise<string[]>;
+  stat(path: string): Promise<FileStat>;
+  lstat(path: string): Promise<FileStat>;
+  readlink(path: string): Promise<never>;
+  symlink(path: string): Promise<never>;
+}
+
+const createNotFoundError = (): Error & { code: string } => {
+  const err = new Error('ENOENT') as Error & { code: string };
+  err.code = 'ENOENT';
+  return err;
+};
+
+const createBrowserFs = (memFs: Map<string, Uint8Array>, folders: Set<string>): VirtualFileSystem => {
+  const fs: VirtualFileSystem = {
+    promises: undefined as unknown as VirtualFileSystem,
+    writeFile: async (path, data) => { memFs.set(path, data); },
+    readFile: async (path) => {
+      const data = memFs.get(path);
+      if (!data) throw createNotFoundError();
+      return data;
+    },
+    mkdir: async (path) => { folders.add(path); },
+    rmdir: async () => {},
+    unlink: async () => {},
+    readdir: async (path) => {
+      const p = path.endsWith('/') ? path : `${path}/`;
+      const entries = new Set<string>();
+      for (const key of memFs.keys()) if (key.startsWith(p)) entries.add(key.substring(p.length).split('/')[0]);
+      for (const key of folders) if (key !== path && key.startsWith(p)) entries.add(key.substring(p.length).split('/')[0]);
+      return Array.from(entries);
+    },
+    stat: async (path) => {
+      if (memFs.has(path)) {
+        return { mode: 0o100644, size: memFs.get(path)!.length, mtimeMs: Date.now(), isDirectory: () => false, isFile: () => true };
+      }
+      const p = path.endsWith('/') ? path : `${path}/`;
+      if (Array.from(memFs.keys()).some(k => k.startsWith(p)) || folders.has(path)) {
+        return { mode: 0o40000, size: 0, mtimeMs: Date.now(), isDirectory: () => true, isFile: () => false };
+      }
+      throw createNotFoundError();
+    },
+    lstat: async (path) => fs.stat(path),
+    readlink: async () => { throw new Error('Not implemented'); },
+    symlink: async () => { throw new Error('Not implemented'); }
+  };
+  fs.promises = fs;
+  return fs;
+};
+
+const createLocalGitFs = (files: File[], pathPrefix: string): VirtualFileSystem => {
+  const fs: VirtualFileSystem = {
+    promises: undefined as unknown as VirtualFileSystem,
+    readFile: async (path) => {
+      const targetPath = pathPrefix + path.replace(/^\//, '');
+      const file = files.find(f => f.webkitRelativePath === targetPath);
+      if (!file) throw createNotFoundError();
+      return new Uint8Array(await file.arrayBuffer());
+    },
+    stat: async (path) => {
+      const targetPath = pathPrefix + path.replace(/^\//, '');
+      const file = files.find(f => f.webkitRelativePath === targetPath);
+      if (file) return { mode: 0o100644, size: file.size, isDirectory: () => false, isFile: () => true };
+      const prefix = targetPath.endsWith('/') ? targetPath : `${targetPath}/`;
+      if (files.some(f => f.webkitRelativePath.startsWith(prefix))) return { mode: 0o40000, isDirectory: () => true, isFile: () => false };
+      throw createNotFoundError();
+    },
+    readdir: async (path) => {
+      const targetPath = pathPrefix + path.replace(/^\//, '');
+      const prefix = targetPath.endsWith('/') ? targetPath : `${targetPath}/`;
+      const entries = new Set<string>();
+      files.forEach(f => {
+        if (f.webkitRelativePath.startsWith(prefix)) entries.add(f.webkitRelativePath.substring(prefix.length).split('/')[0]);
+      });
+      return Array.from(entries);
+    },
+    lstat: async (path) => fs.stat(path),
+    writeFile: async () => {},
+    mkdir: async () => {},
+    rmdir: async () => {},
+    unlink: async () => {},
+    readlink: async () => { throw new Error('Not implemented'); },
+    symlink: async () => { throw new Error('Not implemented'); }
+  };
+  fs.promises = fs;
+  return fs;
+};
 
 export class ProjectExtractor {
   private readonly ignoreList = [
@@ -86,35 +190,7 @@ export class ProjectExtractor {
   async fromRemoteGit(url: string, analyzer: CodeAnalyzer, onProgress?: (info: ProgressInfo) => void): Promise<ExtractionResult> {
     const memFs = new Map<string, Uint8Array>();
     const folders = new Set(['/repo', '/repo/.git']);
-
-    const fs: any = {
-      writeFile: async (path: string, data: Uint8Array) => { memFs.set(path, data); },
-      readFile: async (path: string) => {
-        const data = memFs.get(path);
-        if (!data) { const err: any = new Error('ENOENT'); err.code = 'ENOENT'; throw err; }
-        return data;
-      },
-      mkdir: async (path: string) => { folders.add(path); },
-      rmdir: async () => {},
-      unlink: async () => {},
-      readdir: async (path: string) => {
-        const p = path.endsWith('/') ? path : path + '/';
-        const entries = new Set<string>();
-        for (const key of memFs.keys()) if (key.startsWith(p)) entries.add(key.substring(p.length).split('/')[0]);
-        for (const key of folders) if (key !== path && key.startsWith(p)) entries.add(key.substring(p.length).split('/')[0]);
-        return Array.from(entries);
-      },
-      stat: async (path: string) => {
-        if (memFs.has(path)) return { mode: 0o100644, size: memFs.get(path)!.length, mtimeMs: Date.now(), isDirectory: () => false, isFile: () => true };
-        const p = path.endsWith('/') ? path : path + '/';
-        if (Array.from(memFs.keys()).some(k => k.startsWith(p)) || folders.has(path)) return { mode: 0o40000, size: 0, mtimeMs: Date.now(), isDirectory: () => true, isFile: () => false };
-        const err: any = new Error('ENOENT'); err.code = 'ENOENT'; throw err;
-      },
-      lstat: function(path: string) { return this.stat(path); },
-      readlink: async () => { throw new Error('Not implemented'); },
-      symlink: async () => { throw new Error('Not implemented'); }
-    };
-    fs.promises = fs;
+    const fs = createBrowserFs(memFs, folders);
 
     await git.clone({ 
       fs, 
@@ -155,39 +231,7 @@ export class ProjectExtractor {
     if (gitEntries.length === 0) throw new Error('No .git directory found');
 
     const pathPrefix = gitEntries[0].webkitRelativePath.split('.git/')[0];
-    const fs: any = {
-      readFile: async (path: string) => {
-        const targetPath = pathPrefix + path.replace(/^\//, '');
-        const file = files.find(f => f.webkitRelativePath === targetPath);
-        if (!file) { const err: any = new Error('ENOENT'); err.code = 'ENOENT'; throw err; }
-        return new Uint8Array(await file.arrayBuffer());
-      },
-      stat: async (path: string) => {
-        const targetPath = pathPrefix + path.replace(/^\//, '');
-        const file = files.find(f => f.webkitRelativePath === targetPath);
-        if (file) return { mode: 0o100644, size: file.size, isDirectory: () => false, isFile: () => true };
-        const prefix = targetPath.endsWith('/') ? targetPath : targetPath + '/';
-        if (files.some(f => f.webkitRelativePath.startsWith(prefix))) return { mode: 0o40000, isDirectory: () => true, isFile: () => false };
-        const err: any = new Error('ENOENT'); err.code = 'ENOENT'; throw err;
-      },
-      readdir: async (path: string) => {
-        const targetPath = pathPrefix + path.replace(/^\//, '');
-        const prefix = targetPath.endsWith('/') ? targetPath : targetPath + '/';
-        const entries = new Set<string>();
-        files.forEach(f => {
-          if (f.webkitRelativePath.startsWith(prefix)) entries.add(f.webkitRelativePath.substring(prefix.length).split('/')[0]);
-        });
-        return Array.from(entries);
-      },
-      lstat: function(path: string) { return this.stat(path); },
-      writeFile: async () => {},
-      mkdir: async () => {},
-      rmdir: async () => {},
-      unlink: async () => {},
-      readlink: async () => {},
-      symlink: async () => {}
-    };
-    fs.promises = fs;
+    const fs = createLocalGitFs(files, pathPrefix);
 
     const head = await git.resolveRef({ fs, dir: '/.git', ref: 'HEAD' });
     const projectMap = new Map<string, ExtractedFile>();

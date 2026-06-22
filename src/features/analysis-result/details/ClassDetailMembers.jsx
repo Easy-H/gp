@@ -43,16 +43,16 @@ const ClassDetailMembers = ({
 
   return (
     <section>
-      <h4 style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>Members</h4>
+      <h4 style={{ fontSize: '0.75rem', color: 'var(--panel-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px', borderBottom: '1px solid var(--panel-border)', paddingBottom: '8px' }}>Members</h4>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Fields */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <strong style={{ fontSize: '0.9rem', color: '#475569' }}>필드 (Fields)</strong>
+            <strong style={{ fontSize: '0.9rem', color: 'var(--panel-text)' }}>필드 (Fields)</strong>
             {isEditing && <button onClick={addField} style={addBtnStyle}>+ Add</button>}
           </div>
-          <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {data.fields.length === 0 && <div style={{ fontSize: '0.85rem', color: '#94a3b8', textAlign: 'center', padding: '4px 0' }}>정의된 필드가 없습니다.</div>}
+          <div style={{ backgroundColor: 'var(--panel-bg-2)', padding: '12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {data.fields.length === 0 && <div style={{ fontSize: '0.85rem', color: 'var(--panel-muted)', textAlign: 'center', padding: '4px 0' }}>정의된 필드가 없습니다.</div>}
             {data.fields.map((f, i) => (
               <div key={i}>
                 {isEditing ? (
@@ -71,10 +71,10 @@ const ClassDetailMembers = ({
                     <button onClick={() => removeField(i)} style={removeBtnStyle}>×</button>
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', color: '#334155' }}>
+                  <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', color: 'var(--panel-text)' }}>
                     {getVisibilityBadge(f.visibility)}
                     <span style={{ fontWeight: '500' }}>{f.name}</span>
-                    {f.type && <span style={{ color: '#64748b', marginLeft: '4px' }}>: {f.type}</span>}
+                    {f.type && <span style={{ color: 'var(--panel-muted)', marginLeft: '4px' }}>: {f.type}</span>}
                   </div>
                 )}
               </div>
@@ -85,11 +85,11 @@ const ClassDetailMembers = ({
         {/* Methods */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <strong style={{ fontSize: '0.9rem', color: '#475569' }}>메서드 (Methods)</strong>
+            <strong style={{ fontSize: '0.9rem', color: 'var(--panel-text)' }}>메서드 (Methods)</strong>
             {isEditing && <button onClick={addMethod} style={addBtnStyle}>+ Add</button>}
           </div>
-          <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {data.methods.length === 0 && <div style={{ fontSize: '0.85rem', color: '#94a3b8', textAlign: 'center', padding: '4px 0' }}>정의된 메서드가 없습니다.</div>}
+          <div style={{ backgroundColor: 'var(--panel-bg-2)', padding: '12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {data.methods.length === 0 && <div style={{ fontSize: '0.85rem', color: 'var(--panel-muted)', textAlign: 'center', padding: '4px 0' }}>정의된 메서드가 없습니다.</div>}
             {data.methods.map((m, i) => (
               <div key={i}>
                 {isEditing ? (
@@ -113,10 +113,10 @@ const ClassDetailMembers = ({
                     <button onClick={() => removeMethod(i)} style={removeBtnStyle}>×</button>
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', color: '#334155' }}>
+                  <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', color: 'var(--panel-text)' }}>
                     {getVisibilityBadge(m.visibility)}
                     <span style={{ fontWeight: '500' }}>{m.name}()</span>
-                    {m.type && <span style={{ color: '#64748b', marginLeft: '4px' }}>: {m.type}</span>}
+                    {m.type && <span style={{ color: 'var(--panel-muted)', marginLeft: '4px' }}>: {m.type}</span>}
                   </div>
                 )}
               </div>

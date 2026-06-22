@@ -1,0 +1,1 @@
+Diagram panel feature area.

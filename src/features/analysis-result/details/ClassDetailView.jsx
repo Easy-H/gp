@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ClassDetailHeader from './ClassDetailHeader';
 import ClassDetailRelations from './ClassDetailRelations';
 import ClassDetailMembers from './ClassDetailMembers';
-import ClassFileViewer from './ClassFileViewer';
 
 const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdate, allClassNames, extension }) => {
   const [data, setData] = useState(classInfo);
   const [isEditing, setIsEditing] = useState(false);
-  const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
     setData(classInfo);
@@ -15,7 +13,6 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
 
   useEffect(() => {
     setIsEditing(false); // 클래스 이름이 바뀔 때(즉, 다른 클래스로 이동 시)만 편집 모드 해제
-    setShowCode(false);    // 다른 클래스 선택 시 코드 보기 상태 초기화
   }, [classInfo?.name]);
 
   // 클래스 링크와 "없음" 표시의 높이 및 정렬을 완전히 통일하기 위한 스타일
@@ -27,16 +24,17 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
     alignItems: 'center',
     boxSizing: 'border-box',
     height: '26px', // 26px로 표준화
-    verticalAlign: 'middle'
+    verticalAlign: 'middle',
+    color: 'var(--panel-text)',
   };
 
   // 입력창(input)과 선택창(select)을 위한 공통 스타일
   const inputBaseStyle = {
     ...itemBaseStyle,
     display: 'block', // input은 flex 보다는 block/width 100%가 안정적
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--panel-border)',
     borderRadius: '4px',
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--panel-bg)',
     outline: 'none'
   };
 
@@ -45,8 +43,8 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
     ...itemBaseStyle,
     fontSize: '0.7rem',
     cursor: 'pointer',
-    border: '1px solid #e2e8f0',
-    background: '#fff',
+    border: '1px solid var(--panel-border)',
+    background: 'var(--panel-bg)',
     fontWeight: '600'
   };
 
@@ -100,30 +98,66 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
 
   return (
     <div className="class-detail-card" style={{
-      padding: '24px',
+      padding: 0,
       position: 'relative',
-      backgroundColor: '#fff',
-      border: '1px solid #e2e8f0',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      backgroundColor: 'var(--panel-bg)',
+      border: 'none',
+      borderRadius: 0,
+      boxShadow: 'none',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      flex: 1,
+      minHeight: 0,
+      height: '100%',
+      overflow: 'hidden',
     }}>
       {/* Buttons for navigation and editing */}
       {!data ? (
-        <div style={{ textAlign: 'center', padding: '40px 10px', color: '#666' }}>
-          <div style={{ fontSize: '3.5rem', marginBottom: '15px', opacity: 0.5 }}>🧩</div>
-          <h4 style={{ color: '#1e293b', marginBottom: '8px' }}>클래스 인스펙터</h4>
-          <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: '1.5' }}>
-            위 검색창을 이용해 클래스 이름을 검색하거나,<br />
-            다이어그램에서 클래스를 선택하여 상세 정보를 편집할 수 있습니다.
-          </p>
-          {allClassNames.length > 0 && (
-            <p style={{ fontSize: '0.8rem', color: '#999' }}>현재 {allClassNames.length}개의 클래스가 분석되었습니다.</p>
-          )}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '12px 12px 16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{
+              fontSize: '0.75rem',
+              color: 'var(--panel-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              fontWeight: 700,
+            }}>
+              클래스 선택
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: 10,
+              minHeight: 0,
+              alignContent: 'start',
+            }}>
+              {allClassNames.map((name) => (
+                <button
+                  key={name}
+                  onClick={() => onSelectClass(name)}
+                  style={{
+                    border: '1px solid var(--panel-border)',
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                    background: 'var(--panel-bg-2)',
+                    color: 'var(--panel-text)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {name}
+                </button>
+              ))}
+              {allClassNames.length === 0 && (
+                <div style={{ color: 'var(--panel-muted)', fontSize: '0.9rem' }}>선택 가능한 클래스가 없습니다.</div>
+              )}
+            </div>
+          </div>
         </div>
       ) : (
-        <>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '12px 12px 16px' }}>
           <div style={{
             position: 'absolute', top: '24px', right: '24px',
             display: 'flex', gap: '8px', alignItems: 'center',
@@ -140,11 +174,26 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
             >
               {isEditing ? '✔ 편집 완료' : '✎ 정보 편집'}
             </button>
+            <button
+              onClick={onBack}
+              style={{
+                cursor: 'pointer',
+                border: '1px solid var(--panel-border)',
+                borderRadius: '6px',
+                backgroundColor: 'var(--panel-bg)',
+                color: 'var(--panel-muted)',
+                padding: '6px 12px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                transition: 'all 0.2s',
+              }}
+            >
+              ← 뒤로
+            </button>
           </div>
 
-          <div className="internal-split-layout" style={{ flex: 1, overflow: 'hidden' }}>
-            {/* 왼쪽 섹션: 클래스 상세 정보 */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingRight: '10px', paddingTop: '10px' }}>
+          <div className="internal-split-layout" style={{ flex: 1, overflow: 'visible', minHeight: 0, padding: '12px 12px 8px', alignItems: 'stretch' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'visible', minHeight: 0 }}>
               <ClassDetailHeader
                 data={data}
                 isEditing={isEditing}
@@ -155,7 +204,7 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
                 inputBaseStyle={inputBaseStyle}
                 extension={extension}
               />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0, overflow: 'visible' }}>
                 <ClassDetailRelations
                   data={data}
                   isEditing={isEditing}
@@ -180,14 +229,8 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
                 />
               </div>
             </div>
-              {/* 오른쪽 섹션: 파일 정보 및 코드 내용 */}
-              <ClassFileViewer
-                data={data}
-                showCode={showCode}
-                setShowCode={setShowCode}
-              />
-            </div>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

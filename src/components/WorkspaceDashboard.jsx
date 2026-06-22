@@ -1,7 +1,7 @@
 import React from 'react';
-import MermaidDiagramDisplay from './DiagramDisplay';
-import ClassSearch from './ClassSearch';
-import ClassDetailView from './ClassDetailView';
+import MermaidDiagramDisplay from '../features/analysis-result/diagram/DiagramDisplay';
+import ClassSearch from '../features/analysis-result/source/ClassSearch';
+import ClassDetailView from '../features/analysis-result/details/ClassDetailView';
 
 const WorkspaceDashboard = ({
   currentClasses,
@@ -84,4 +84,3 @@ const WorkspaceDashboard = ({
 };
 
 export default WorkspaceDashboard;
-

@@ -1,34 +1,60 @@
 import React from 'react';
 
-const AppHeader = ({ onOpenExport, onOpenAnalysis }) => {
+const AppHeader = ({ onOpenExport, onOpenAnalysis, theme, onToggleTheme }) => {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '12px 0',
-      borderBottom: '1px solid #e2e8f0',
-      marginBottom: '6px'
+      padding: '10px 12px',
+      borderBottom: '1px solid var(--app-border)',
+      backgroundColor: 'var(--app-header-bg)',
+      backdropFilter: 'blur(14px)',
     }}>
-      <div style={{ fontSize: '1.75rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ color: '#3b82f6', letterSpacing: '-0.02em' }}>Notation</span>
+      <div style={{ fontSize: '1.5rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px', lineHeight: 1 }}>
+        <span style={{ color: 'var(--app-text)', letterSpacing: '-0.02em' }}>Notation</span>
       </div>
-      <div style={{ display: 'flex', gap: '10px' }}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button
+          onClick={onToggleTheme}
+          title={theme === 'dark' ? '라이트모드로 전환' : '다크모드로 전환'}
+          aria-label={theme === 'dark' ? '라이트모드로 전환' : '다크모드로 전환'}
+          style={{ width: 38, height: 38, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--app-surface)', color: 'var(--app-text)', border: '1px solid var(--app-border)', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '16px', lineHeight: 1, transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+        >
+          {theme === 'dark' ? '☀' : '☾'}
+        </button>
         <button
           onClick={onOpenExport}
-          style={{ padding: '10px 20px', backgroundColor: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-          onMouseEnter={(e) => { e.target.style.backgroundColor = '#f8fafc'; e.target.style.borderColor = '#cbd5e1'; }}
-          onMouseLeave={(e) => { e.target.style.backgroundColor = '#fff'; e.target.style.borderColor = '#e2e8f0'; }}
-        >저장 및 내보내기</button>
+          title="저장 및 내보내기"
+          aria-label="저장 및 내보내기"
+          style={{ width: 38, height: 38, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--app-surface)', color: 'var(--app-text)', border: '1px solid var(--app-border)', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '18px', lineHeight: 1, transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+        >⇩</button>
         <button
           onClick={onOpenAnalysis}
-          style={{ padding: '10px 20px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '14px', transition: 'all 0.2s', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)' }}
-          onMouseEnter={(e) => { e.target.style.backgroundColor = '#059669'; e.target.style.transform = 'translateY(-1px)'; }}
-          onMouseLeave={(e) => { e.target.style.backgroundColor = '#10b981'; e.target.style.transform = 'translateY(0)'; }}
-        >새 프로젝트 분석하기</button>
+          title="새 프로젝트 분석하기"
+          aria-label="새 프로젝트 분석하기"
+          style={{
+            width: 40,
+            height: 40,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'var(--app-primary)',
+            color: 'white',
+            border: '1px solid color-mix(in srgb, var(--app-primary) 70%, black)',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: '800',
+            fontSize: '20px',
+            lineHeight: 1,
+            transition: 'all 0.2s',
+            boxShadow: '0 10px 18px -8px color-mix(in srgb, var(--app-primary) 55%, transparent)',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >＋</button>
       </div>
     </div>
   );
 };
 
 export default AppHeader;
-

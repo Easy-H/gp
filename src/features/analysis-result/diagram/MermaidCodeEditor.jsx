@@ -4,17 +4,24 @@ const MermaidCodeEditor = ({ value, onChange }) => {
   return (
     <textarea
       rows="10"
+      wrap="soft"
       className="mermaid-split-textarea"
       style={{
         padding: '16px',
         fontFamily: 'monospace',
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'var(--panel-bg-2)',
         border: 'none',
         borderRadius: '0',
         fontSize: '13px',
-        color: '#334155',
+        color: 'var(--panel-text)',
         resize: 'vertical',
         flex: 1,
+        width: '100%',
+        minWidth: 0,
+        boxSizing: 'border-box',
+        whiteSpace: 'pre-wrap',
+        overflowWrap: 'anywhere',
+        overflowX: 'hidden',
       }}
       value={value}
       onChange={(e) => onChange(e.target.value)}

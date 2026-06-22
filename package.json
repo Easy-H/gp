@@ -17,6 +17,7 @@
     "mermaid": "^11.4.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-resizable-panels": "^4.11.2",
     "react-zoom-pan-pinch": "^4.0.3",
     "stream-browserify": "^3.0.0",
     "web-tree-sitter": "^0.26.8"

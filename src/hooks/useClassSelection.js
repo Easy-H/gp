@@ -23,7 +23,10 @@ export const useClassSelection = () => {
 
   const handleGoBack = () => {
     setNavigationHistory((prev) => {
-      if (prev.length === 0) return prev;
+      if (prev.length === 0) {
+        setSelectedClassName(null);
+        return prev;
+      }
       const nextHistory = [...prev];
       const prevClass = nextHistory.pop();
       setSelectedClassName(prevClass ?? null);
@@ -40,4 +43,3 @@ export const useClassSelection = () => {
     setNavigationHistory,
   };
 };
-

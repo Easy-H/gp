@@ -22,6 +22,7 @@ export default defineConfig({
       process: 'process/browser',
       crypto: 'crypto-browserify',
       stream: 'stream-browserify',
+      '@packages/panel-layout': path.resolve(__dirname, '@packages/panel-layout'),
     },
   },
   optimizeDeps: {

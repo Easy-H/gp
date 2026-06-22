@@ -5,9 +5,9 @@ const TabMenu = ({ activeTab, setActiveTab }) => {
     padding: '10px 20px',
     cursor: 'pointer',
     border: 'none',
-    borderBottom: activeTab === tab ? '3px solid #007bff' : 'none',
-    color: 'black',
-    background: 'none',
+    borderBottom: activeTab === tab ? '3px solid var(--app-primary)' : 'none',
+    color: 'var(--panel-text)',
+    background: 'transparent',
     fontWeight: activeTab === tab ? 'bold' : 'normal'
   });
 

@@ -40,12 +40,10 @@ const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering, selectedC
 
           const svg = mermaidRef.current.querySelector('svg');
           if (svg) {
-            svg.style.maxWidth = 'none';
+            svg.style.maxWidth = '100%';
+            svg.style.width = '100%';
             svg.style.height = 'auto';
-            if (svg.viewBox && svg.viewBox.baseVal) {
-              const { width } = svg.viewBox.baseVal;
-              if (width > 0) svg.style.width = `${width}px`;
-            }
+            svg.style.display = 'block';
 
             requestAnimationFrame(() => {
               transformComponentRef.current?.zoomToElement(svg);
@@ -93,43 +91,68 @@ const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering, selectedC
     display: 'flex',
     gap: '8px',
     padding: '6px',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'color-mix(in srgb, var(--panel-bg) 88%, transparent)',
     backdropFilter: 'blur(8px)',
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--panel-border)',
     borderRadius: '10px',
     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-    zIndex: 20
+    zIndex: 20,
+    flexWrap: 'nowrap',
+    whiteSpace: 'nowrap',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    maxWidth: 'calc(100% - 48px)',
   };
 
   const btnStyle = {
     padding: '8px 14px',
-    backgroundColor: '#fff',
-    border: '1px solid #e2e8f0',
+    backgroundColor: 'var(--panel-bg)',
+    border: '1px solid var(--panel-border)',
     borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '0.85rem',
     fontWeight: '600',
-    color: '#475569',
+    color: 'var(--panel-text)',
     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     display: 'flex',
     alignItems: 'center',
     gap: '4px'
   };
 
+  const hideScrollbarStyle = {
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+  };
+
+  const toolbarScrollbarStyle = {
+    ...hideScrollbarStyle,
+    WebkitOverflowScrolling: 'touch',
+  };
+
   return (
     <div
       style={{
-        border: '1px solid #e2e8f0',
-        background: '#f8fafc',
-        backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)',
+        background: 'var(--panel-bg)',
+        backgroundImage: 'radial-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px)',
         backgroundSize: '24px 24px',
         overflow: 'hidden',
         width: '100%',
-        height: '500px',
+        height: '100%',
+        minHeight: 0,
         position: 'relative',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
       }}
     >
+      <style>{`
+        .diagram-control-scrollbar-hidden {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .diagram-control-scrollbar-hidden::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+          display: none;
+        }
+      `}</style>
       <TransformWrapper
         ref={transformComponentRef}
         initialScale={1}
@@ -145,7 +168,7 @@ const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering, selectedC
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
           <>
-            <div style={toolbarStyle}>
+            <div className="diagram-control-scrollbar-hidden" style={{ ...toolbarStyle, ...toolbarScrollbarStyle }}>
               <button className="diagram-toolbar-btn" style={btnStyle} onClick={() => zoomIn()}><span>➕</span> 확대</button>
               <button className="diagram-toolbar-btn" style={btnStyle} onClick={() => zoomOut()}><span>➖</span> 축소</button>
               <button className="diagram-toolbar-btn" style={btnStyle} onClick={() => resetTransform()}><span>🔄</span> 리셋</button>
@@ -158,18 +181,18 @@ const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering, selectedC
             {isRendering && (
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(2px)',
+                backgroundColor: 'color-mix(in srgb, var(--panel-bg) 70%, transparent)', backdropFilter: 'blur(2px)',
                 display: 'flex', justifyContent: 'center', alignItems: 'center',
                 zIndex: 10, fontWeight: '700', color: '#3b82f6', borderRadius: '12px'
               }}>
-                <div style={{ padding: '12px 24px', backgroundColor: '#fff', borderRadius: '30px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+                <div style={{ padding: '12px 24px', backgroundColor: 'var(--panel-bg)', color: 'var(--panel-text)', borderRadius: '30px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
                   다이어그램 생성 중...
                 </div>
               </div>
             )}
 
-            <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }} contentStyle={{ cursor: isRendering ? 'wait' : 'grab' }}>
-              <div style={{ padding: '100px', display: 'inline-block', minWidth: 'max-content', minHeight: 'max-content' }}>
+            <TransformComponent wrapperStyle={{ width: "100%", height: "100%", ...hideScrollbarStyle }} contentStyle={{ cursor: isRendering ? 'wait' : 'grab', width: '100%', height: '100%', minWidth: '100%' }}>
+              <div style={{ padding: '12px', display: 'block', minWidth: '100%', minHeight: '100%', width: '100%', height: '100%', boxSizing: 'border-box' }}>
                 <div ref={mermaidRef} className="mermaid" />
               </div>
             </TransformComponent>

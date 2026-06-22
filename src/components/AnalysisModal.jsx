@@ -27,9 +27,9 @@ const AnalysisModal = ({
   if (!isOpen) return null;
   return (
     <Modal onClose={onClose}>
-      <div style={{ padding: '32px' }}>
-        <h2 style={{ marginTop: 0, marginBottom: '8px', color: '#0f172a', fontWeight: '800' }}>프로젝트 분석 시작</h2>
-        <p style={{ color: '#64748b', marginBottom: '24px' }}>분석할 소스 코드의 소스를 선택해주세요.</p>
+      <div style={{ padding: '32px', color: 'var(--panel-text)' }}>
+        <h2 style={{ marginTop: 0, marginBottom: '8px', color: 'var(--panel-text)', fontWeight: '800' }}>프로젝트 분석 시작</h2>
+        <p style={{ color: 'var(--panel-muted)', marginBottom: '24px' }}>분석할 소스 코드의 소스를 선택해주세요.</p>
         <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
         <div style={{ marginTop: '24px' }}>
           {activeTab === 'zip' && (
@@ -57,4 +57,3 @@ const AnalysisModal = ({
 };
 
 export default AnalysisModal;
-

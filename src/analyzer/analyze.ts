@@ -53,6 +53,84 @@ const getTypeIdentifiers = (node: TreeSitterNodeLike): string[] => {
   return results;
 };
 
+const addAssociation = (
+  classInfo: ClassInfo,
+  effectiveMetadata: Map<string, string>,
+  targetClass: string,
+  label: string,
+  relationType: 'composition' | 'association'
+) => {
+  if (!targetClass || targetClass === classInfo.name) return;
+  if (!effectiveMetadata.has(targetClass)) return;
+  if (!classInfo.associations.some(a => a.target === targetClass && a.label === label)) {
+    classInfo.associations.push({ target: targetClass, label, relationType });
+  }
+};
+
+const findFirstNodeOfTypes = (node: TreeSitterNodeLike, types: string[]): TreeSitterNodeLike | null => {
+  if (!types || types.length === 0) return null;
+  if (types.includes(node.type)) return node;
+  for (let i = 0; i < node.childCount; i++) {
+    const found = findFirstNodeOfTypes(node.child(i), types);
+    if (found) return found;
+  }
+  return null;
+};
+
+const getParameterInfo = (param: TreeSitterNodeLike) => {
+  const nameNode = param.childForFieldName('name') || param.childForFieldName('identifier');
+  const typeNode = param.childForFieldName('type') || param.childForFieldName('value');
+  return {
+    label: nameNode?.text?.trim().replace(/[;]/g, '') ?? '',
+    targetClass: typeNode?.text?.split('.').pop()?.replace(/[<>\[\];{}]/g, '').trim() ?? '',
+  };
+};
+
+const getAssignmentFieldInfo = (node: TreeSitterNodeLike) => {
+  if (node.type !== 'assignment_expression') return null;
+  const leftNode = node.childForFieldName('left');
+  const rightNode = node.childForFieldName('right');
+  const leftText = leftNode?.text?.trim() ?? '';
+  if (!leftText.startsWith('this.')) return null;
+
+  const fieldName = leftText.replace(/^this\./, '').replace(/[;]/g, '').trim();
+  const rightText = rightNode?.text?.trim() ?? '';
+  const constructorNode = rightNode?.childForFieldName('constructor') || rightNode?.childForFieldName('type');
+  const targetClass = (constructorNode?.text || rightText)
+    .split('.')
+    .pop()
+    ?.replace(/[<>\[\];{}()]/g, '')
+    .trim() ?? '';
+
+  return {
+    fieldName,
+    targetClass,
+    isNewExpression: rightNode?.type === 'new_expression' || rightText.startsWith('new '),
+  };
+};
+
+const walkForAssignmentFields = (
+  node: TreeSitterNodeLike,
+  classInfo: ClassInfo,
+  effectiveMetadata: Map<string, string>
+) => {
+  const visit = (n: TreeSitterNodeLike) => {
+    const info = getAssignmentFieldInfo(n);
+    if (info && info.isNewExpression) {
+      if (!classInfo.fields.some(f => f.name === info.fieldName)) {
+        classInfo.fields.push({
+          name: info.fieldName,
+          type: info.targetClass,
+          visibility: 'private'
+        });
+      }
+      addAssociation(classInfo, effectiveMetadata, info.targetClass, info.fieldName, 'composition');
+    }
+    for (let i = 0; i < n.childCount; i++) visit(n.child(i));
+  };
+  visit(node);
+};
+
 export const analyzeSourceCode = (
   parser: Parser | null,
   lang: Language | undefined,
@@ -68,30 +146,6 @@ export const analyzeSourceCode = (
     const tree = parser.parse(sourceCode);
     const classes: ClassInfo[] = [];
     const effectiveMetadata = projectClassMetadata.size > 0 ? projectClassMetadata : extractClassMetadata(parser, lang, config, sourceCode);
-
-    const extractAssociations = (node: TreeSitterNodeLike, classInfo: ClassInfo, isComposition = false) => {
-      if (node.type === 'new_expression') {
-        const constructorNode = node.childForFieldName('constructor');
-        if (constructorNode || node.childForFieldName('type')) {
-          const targetClass = (constructorNode?.text || node.childForFieldName('type')?.text || '').split('.').pop()!.replace(/[;()]/g, '').trim();
-          if (effectiveMetadata.has(targetClass) && targetClass !== classInfo.name) {
-            let label = '';
-            let p = node.parent;
-            while (p && p.type !== 'statement_block' && p.type !== 'class_body') {
-              if (p.type === 'assignment_expression') { label = p.childForFieldName('left')?.text || ''; break; }
-              if (p.type === 'variable_declarator') { label = p.childForFieldName('id')?.text || p.childForFieldName('name')?.text || ''; break; }
-              if (p.type === 'field_definition' || p.type === 'public_instance_level_property_definition') { label = p.childForFieldName('name')?.text || ''; break; }
-              p = p.parent;
-            }
-            label = label.replace(/^this\./, '').split('[')[0].replace(/[;]/g, '').trim();
-            if (!classInfo.associations.some(a => a.target === targetClass && a.label === label)) {
-              classInfo.associations.push({ target: targetClass, label, relationType: isComposition ? 'composition' : 'association' });
-            }
-          }
-        }
-      }
-      for (let i = 0; i < node.childCount; i++) extractAssociations(node.child(i), classInfo, isComposition);
-    };
 
     const traverse = (node: TreeSitterNodeLike) => {
       if (config.classNodes.includes(node.type)) {
@@ -153,6 +207,7 @@ export const analyzeSourceCode = (
         if (body) {
           for (let i = 0; i < body.childCount; i++) {
             const child = body.child(i);
+
             if (config.methodNodes.includes(child.type)) {
               const methodNameNode = child.childForFieldName('identifier') || child.childForFieldName('name');
               const returnTypeNode = child.childForFieldName('type') || child.childForFieldName('return_type');
@@ -162,9 +217,24 @@ export const analyzeSourceCode = (
                   type: returnTypeNode ? returnTypeNode.text.trim() : '',
                   visibility: extractVisibility(child, ext, methodNameNode.text)
                 });
-                extractAssociations(child, classInfo, false);
+
+                const paramContainer = findFirstNodeOfTypes(child, config.parameterNodes ?? []);
+                if (paramContainer) {
+                  for (let p = 0; p < paramContainer.childCount; p++) {
+                    const param = paramContainer.child(p);
+                    const { targetClass, label } = getParameterInfo(param);
+                    addAssociation(classInfo, effectiveMetadata, targetClass, label, 'association');
+                  }
+                }
+
+                if (ext === 'js' || ext === 'jsx' || ext === 'ts' || ext === 'tsx') {
+                  walkForAssignmentFields(child, classInfo, effectiveMetadata);
+                }
               }
-            } else if (config.fieldNodes.includes(child.type)) {
+              continue;
+            }
+
+            if (config.fieldNodes.includes(child.type)) {
               let fieldNameNode = child.childForFieldName('identifier') || child.childForFieldName('name');
               const typeNode = child.childForFieldName('type');
               if (!fieldNameNode && child.type === 'field_declaration') {
@@ -172,12 +242,15 @@ export const analyzeSourceCode = (
                 if (declarator) fieldNameNode = declarator.childForFieldName('identifier') || declarator.childForFieldName('name');
               }
               if (fieldNameNode) {
+                const fieldName = fieldNameNode.text.trim().replace(/[;]/g, '');
                 classInfo.fields.push({
-                  name: fieldNameNode.text.trim().replace(/[;]/g, ''),
+                  name: fieldName,
                   type: typeNode ? typeNode.text.trim() : '',
                   visibility: extractVisibility(child, ext, fieldNameNode.text)
                 });
-                extractAssociations(child, classInfo, true);
+
+                const fieldType = typeNode?.text?.split('.').pop()?.replace(/[<>\[\];{}]/g, '').trim() ?? '';
+                addAssociation(classInfo, effectiveMetadata, fieldType, fieldName, 'composition');
               }
             }
           }

@@ -26,31 +26,31 @@ const AnalysisModal = ({
 }) => {
   if (!isOpen) return null;
   return (
-    <Modal onClose={onClose}>
-      <div style={{ padding: '32px', color: 'var(--panel-text)' }}>
-        <h2 style={{ marginTop: 0, marginBottom: '8px', color: 'var(--panel-text)', fontWeight: '800' }}>프로젝트 분석 시작</h2>
-        <p style={{ color: 'var(--panel-muted)', marginBottom: '24px' }}>분석할 소스 코드의 소스를 선택해주세요.</p>
-        <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div style={{ marginTop: '24px' }}>
-          {activeTab === 'zip' && (
-            <ZipUpload isProcessing={isProcessing} processingStatus={processingStatus} onUpload={onZipUpload} />
-          )}
-          {activeTab === 'git' && (
-            <GitFolderUpload
-              onUpload={onGitUpload}
-              onRemoteAnalyze={onRemoteAnalyze}
-              gitUrl={gitUrl} setGitUrl={setGitUrl}
-              isProcessing={isProcessing} processingStatus={processingStatus}
-            />
-          )}
-          {activeTab === 'input' && (
-            <CodeInput
-              extension={extension} setExtension={setExtension}
-              code={code} setCode={setCode}
-              onAnalyze={onAnalyze} onLoadSample={onLoadSample}
-            />
-          )}
-        </div>
+    <Modal
+      onClose={onClose}
+      title="프로젝트 분석 시작"
+      description="분석할 소스 코드의 소스를 선택해주세요."
+      fixedContent={<TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />}
+    >
+      <div>
+        {activeTab === 'zip' && (
+          <ZipUpload isProcessing={isProcessing} processingStatus={processingStatus} onUpload={onZipUpload} />
+        )}
+        {activeTab === 'git' && (
+          <GitFolderUpload
+            onUpload={onGitUpload}
+            onRemoteAnalyze={onRemoteAnalyze}
+            gitUrl={gitUrl} setGitUrl={setGitUrl}
+            isProcessing={isProcessing} processingStatus={processingStatus}
+          />
+        )}
+        {activeTab === 'input' && (
+          <CodeInput
+            extension={extension} setExtension={setExtension}
+            code={code} setCode={setCode}
+            onAnalyze={onAnalyze} onLoadSample={onLoadSample}
+          />
+        )}
       </div>
     </Modal>
   );

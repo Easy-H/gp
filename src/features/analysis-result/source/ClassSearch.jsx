@@ -2,16 +2,6 @@ import React, { useState } from 'react';
 
 const ClassSearch = ({ classes, onSelectClass }) => {
   const [term, setTerm] = useState('');
-  const fieldStyle = {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: 8,
-    border: '1px solid var(--panel-border)',
-    boxSizing: 'border-box',
-    fontSize: '14px',
-    background: 'var(--panel-bg)',
-    color: 'var(--panel-text)',
-  };
   const dropdownStyle = {
     position: 'absolute',
     zIndex: 100,
@@ -31,11 +21,11 @@ const ClassSearch = ({ classes, onSelectClass }) => {
   return (
     <div style={{ position: 'relative' }}>
       <input
+        className="app-input app-input-lg"
         type="text"
         placeholder="클래스 검색 (이름)..."
         value={term}
         onChange={(e) => setTerm(e.target.value)}
-        style={fieldStyle}
       />
       {term ? (
         <div style={dropdownStyle}>

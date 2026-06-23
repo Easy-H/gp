@@ -65,12 +65,12 @@ const ClassDetailRelations = ({
 
   return (
     <section>
-      <h4 style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>Hierarchy & Relations</h4>
+      <h4 style={{ fontSize: '0.75rem', color: 'var(--panel-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px', borderBottom: '1px solid var(--panel-border)', paddingBottom: '8px' }}>Hierarchy & Relations</h4>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--panel-section-gap)' }}>
         {/* Parents */}
         <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <strong style={{ color: '#64748b' }}>상속(Parents):</strong>
+          <strong style={{ color: 'var(--panel-muted)' }}>상속(Parents):</strong>
           {isEditing ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
               {data.parents.map((p, i) => (
@@ -84,13 +84,13 @@ const ClassDetailRelations = ({
               )}
             </div>
           ) : (
-            data.parents.length > 0 ? data.parents.map(renderLink) : <span style={{ ...itemBaseStyle, color: '#94a3b8' }}>없음</span>
+            data.parents.length > 0 ? data.parents.map(renderLink) : <span style={{ ...itemBaseStyle, color: 'var(--panel-muted)' }}>없음</span>
           )}
         </div>
 
         {/* Implements */}
         <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <strong style={{ color: '#64748b' }}>구현(Implements):</strong>
+          <strong style={{ color: 'var(--panel-muted)' }}>구현(Implements):</strong>
           {isEditing ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
               {data.implements.map((p, i) => (
@@ -102,13 +102,13 @@ const ClassDetailRelations = ({
               <button onClick={addImplement} style={addBtnStyle}>+ Add</button>
             </div>
           ) : (
-            data.implements.length > 0 ? data.implements.map(renderLink) : <span style={{ ...itemBaseStyle, color: '#94a3b8' }}>없음</span>
+            data.implements.length > 0 ? data.implements.map(renderLink) : <span style={{ ...itemBaseStyle, color: 'var(--panel-muted)' }}>없음</span>
           )}
         </div>
 
         {/* Associations */}
         <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <strong style={{ color: '#64748b' }}>연관(Associations):</strong>
+          <strong style={{ color: 'var(--panel-muted)' }}>연관(Associations):</strong>
           {isEditing ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
               {data.associations.map((a, i) => a.relationType === 'association' && (
@@ -124,14 +124,14 @@ const ClassDetailRelations = ({
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
               {data.associations.filter(a => a.relationType === 'association').length > 0 ? (
                 data.associations.map((a, i) => a.relationType === 'association' && (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', color: '#334155' }}>
-                    <span style={{ color: '#94a3b8', marginRight: '4px' }}>→</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', color: 'var(--panel-text)' }}>
+                    <span style={{ color: 'var(--panel-muted)', marginRight: '4px' }}>→</span>
                     {renderLink(a.target)}
-                    {a.label && <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '4px' }}>[{a.label}]</span>}
+                    {a.label && <span style={{ fontSize: '0.8rem', color: 'var(--panel-muted)', marginLeft: '4px' }}>[{a.label}]</span>}
                   </div>
                 ))
               ) : (
-                <span style={{ ...itemBaseStyle, color: '#94a3b8' }}>없음</span>
+                <span style={{ ...itemBaseStyle, color: 'var(--panel-muted)' }}>없음</span>
               )}
             </div>
           )}
@@ -139,7 +139,7 @@ const ClassDetailRelations = ({
 
         {/* Compositions */}
         <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <strong style={{ color: '#64748b' }}>포함(Compositions):</strong>
+          <strong style={{ color: 'var(--panel-muted)' }}>포함(Compositions):</strong>
           {isEditing ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
               {data.associations.map((a, i) => a.relationType === 'composition' && (
@@ -155,14 +155,14 @@ const ClassDetailRelations = ({
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
               {data.associations.filter(a => a.relationType === 'composition').length > 0 ? (
                 data.associations.map((a, i) => a.relationType === 'composition' && (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', color: '#334155' }}>
-                    <span style={{ color: '#94a3b8', marginRight: '4px' }}>◆</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', color: 'var(--panel-text)' }}>
+                    <span style={{ color: 'var(--panel-muted)', marginRight: '4px' }}>◆</span>
                     {renderLink(a.target)}
-                    {a.label && <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '4px' }}>[{a.label}]</span>}
+                    {a.label && <span style={{ fontSize: '0.8rem', color: 'var(--panel-muted)', marginLeft: '4px' }}>[{a.label}]</span>}
                   </div>
                 ))
               ) : (
-                <span style={{ ...itemBaseStyle, color: '#94a3b8' }}>없음</span>
+                <span style={{ ...itemBaseStyle, color: 'var(--panel-muted)' }}>없음</span>
               )}
             </div>
           )}
@@ -170,8 +170,8 @@ const ClassDetailRelations = ({
 
         {/* Descendants */}
         <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', minHeight: '24px' }}>
-          <strong style={{ color: '#64748b' }}>자손 클래스(Descendants):</strong>
-          {data.children && data.children.length > 0 ? data.children.map(renderLink) : <span style={{ ...itemBaseStyle, color: '#94a3b8' }}>없음</span>}
+          <strong style={{ color: 'var(--panel-muted)' }}>자손 클래스(Descendants):</strong>
+          {data.children && data.children.length > 0 ? data.children.map(renderLink) : <span style={{ ...itemBaseStyle, color: 'var(--panel-muted)' }}>없음</span>}
         </div>
       </div>
     </section>

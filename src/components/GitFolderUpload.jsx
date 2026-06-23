@@ -15,12 +15,13 @@ const GitFolderUpload = ({ onUpload, onRemoteAnalyze, gitUrl, setGitUrl, isProce
           <p style={{ margin: '0 0 10px 0', fontSize: '1.1rem', fontWeight: 'bold' }}>방법 1: 원격 Git URL 입력</p>
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
           <input 
-            style={{ width: '60%', padding: '10px', borderRadius: '4px', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--panel-text)' }}
+            className="app-input"
+            style={{ width: '60%' }}
             placeholder="https://github.com/username/project.git"
             value={gitUrl}
             onChange={(e) => setGitUrl(e.target.value)}
           />
-          <button onClick={() => onRemoteAnalyze(gitUrl)} disabled={isProcessing || !gitUrl} style={{ padding: '10px 20px', backgroundColor: 'var(--app-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>분석 시작</button>
+          <button className="app-btn app-btn-primary" onClick={() => onRemoteAnalyze(gitUrl)} disabled={isProcessing || !gitUrl}>분석 시작</button>
         </div>
       </div>
 
@@ -37,7 +38,7 @@ const GitFolderUpload = ({ onUpload, onRemoteAnalyze, gitUrl, setGitUrl, isProce
       />
       <div style={{ fontSize: '12px', color: 'var(--panel-muted)', marginTop: '10px', lineHeight: '1.6' }}>
         <p>* 선택한 폴더의 최신 커밋(HEAD) 상태를 분석합니다.</p>
-        <p style={{ color: '#f87171', fontWeight: 'bold' }}>
+        <p style={{ color: 'var(--app-danger)', fontWeight: 'bold' }}>
           주의: 브라우저 설정에 따라 .git 폴더가 무시될 수 있습니다.<br/>
           분석이 안 될 경우 프로젝트를 .zip으로 압축하여 업로드하세요.
         </p>

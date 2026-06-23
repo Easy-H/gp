@@ -96,6 +96,16 @@ const App = () => {
           '--app-header-bg': 'rgba(11, 18, 32, 0.92)',
           '--app-code-bg': '#0b1120',
           '--app-primary': '#60a5fa',
+          '--app-success': '#34d399',
+          '--app-danger': '#f87171',
+          '--app-warning': '#fbbf24',
+          '--app-info': '#818cf8',
+          '--app-link-bg': 'rgba(96, 165, 250, 0.14)',
+          '--app-link-text': '#93c5fd',
+          '--panel-layout-bg': '#070d19',
+          '--panel-layout-box': '#111827',
+          '--panel-layout-surface': '#273449',
+          '--panel-layout-text': '#dbeafe',
         }
       : {
           '--app-bg': '#f8fafc',
@@ -107,6 +117,16 @@ const App = () => {
           '--app-header-bg': 'rgba(248, 250, 252, 0.92)',
           '--app-code-bg': '#f1f5f9',
           '--app-primary': '#3b82f6',
+          '--app-success': '#10b981',
+          '--app-danger': '#ef4444',
+          '--app-warning': '#f59e0b',
+          '--app-info': '#6366f1',
+          '--app-link-bg': '#eff6ff',
+          '--app-link-text': '#2563eb',
+          '--panel-layout-bg': '#d9e2ee',
+          '--panel-layout-box': '#ffffff',
+          '--panel-layout-surface': '#c2cedd',
+          '--panel-layout-text': '#1e293b',
         };
 
     Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value));
@@ -118,10 +138,10 @@ const App = () => {
   }, [theme]);
 
   return (
-    <div style={{ padding: 0, margin: 0, width: '100%', minHeight: '100vh', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--app-bg)', color: 'var(--app-text)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: 0, margin: 0, width: '100%', minHeight: 0, height: '100dvh', maxHeight: '100dvh', overflow: 'hidden', backgroundColor: 'var(--app-bg)', color: 'var(--app-text)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <AppStyles />
 
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}>
         <AppHeader
           onOpenExport={() => setShowExportModal(true)}
           onOpenAnalysis={() => setShowAnalysisModal(true)}
@@ -149,7 +169,7 @@ const App = () => {
           onGitUpload={handleGitDirectoryAnalysis}
         />
 
-        <div style={{ marginTop: 0, flex: 1, minHeight: 0, display: 'flex' }}>
+        <div style={{ marginTop: 0, flex: 1, minHeight: 0, maxHeight: '100%', display: 'flex', overflow: 'hidden' }}>
         <AnalysisPanelWorkspace
           panels={panels}
           setPanels={setPanels}

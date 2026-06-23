@@ -20,33 +20,33 @@ const createPanel = (type) => ({
   title: PANEL_TYPES[type]?.title ?? type,
 });
 
-const getPanelColors = (theme) => theme === 'dark'
-  ? {
-      background: '#0b1120',
-      box: '#1f2937',
-      surface: '#374151',
-      text: '#e5e7eb',
-      primary: 'var(--app-primary)',
-    }
-  : {
-      background: '#e5e7eb',
-      box: '#ffffff',
-      surface: '#cbd5e1',
-      text: '#0f172a',
-      primary: 'var(--app-primary)',
-    };
+const panelColors = {
+  background: 'var(--panel-layout-bg)',
+  box: 'var(--panel-layout-box)',
+  surface: 'var(--panel-layout-surface)',
+  text: 'var(--panel-layout-text)',
+  primary: 'var(--app-primary)',
+};
+
+const renderPanelTabLabel = (item, isActive) => (
+  <span
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      minHeight: 24,
+      fontSize: 13,
+      lineHeight: '18px',
+      fontWeight: isActive ? 800 : 600,
+      letterSpacing: '-0.01em',
+      color: isActive ? 'var(--app-primary)' : 'var(--panel-layout-text)',
+      opacity: isActive ? 1 : 0.72,
+    }}
+  >
+    {item.title}
+  </span>
+);
 
 const searchBoxStyle = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 12,
-  border: '1px solid var(--panel-border)',
-  boxSizing: 'border-box',
-  fontSize: '14px',
-  background: 'var(--panel-bg)',
-  color: 'var(--panel-text)',
-  height: '42px',
-  lineHeight: '20px',
   boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
 };
 
@@ -71,46 +71,32 @@ const SourcePanel = ({ selectedClass, classes, onSelectClass }) => {
     : [];
 
   return (
-    <div style={{ height: '100%', overflow: 'hidden', padding: 0, background: 'var(--panel-bg)', color: 'var(--panel-text)', display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minHeight: 0, padding: '12px' }}>
+    <div className="analysis-panel-shell">
+      <div className="analysis-panel-stack">
         {!selectedClass ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1, minHeight: 0 }}>
-            <input value={sourceQuery} onChange={(e) => setSourceQuery(e.target.value)} placeholder="원본 코드 검색" style={searchBoxStyle} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, overflow: 'auto', minHeight: 0, alignContent: 'start' }}>
+          <div className="analysis-panel-stack">
+            <input className="app-input app-input-lg" value={sourceQuery} onChange={(e) => setSourceQuery(e.target.value)} placeholder="원본 코드 검색" style={searchBoxStyle} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--panel-gap)', overflow: 'auto', minHeight: 0, alignContent: 'start' }}>
               {classes.filter((c) => c.name.toLowerCase().includes(sourceQuery.toLowerCase())).map((c) => (
-                <button key={c.name} onClick={() => onSelectClass(c.name)} style={{ border: '1px solid var(--panel-border)', borderRadius: 10, padding: '12px 14px', background: 'var(--panel-bg-2)', color: 'var(--panel-text)', cursor: 'pointer', textAlign: 'left', fontSize: '0.9rem', fontWeight: 600 }}>
+                <button key={c.name} className="app-btn" onClick={() => onSelectClass(c.name)} style={{ justifyContent: 'flex-start', minHeight: 44, textAlign: 'left' }}>
                   {c.name}
                 </button>
               ))}
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minHeight: 0, position: 'relative' }}>
-            <input value={sourceQuery} onChange={(e) => setSourceQuery(e.target.value)} placeholder="원본 코드 검색" style={searchBoxStyle} />
-            <div style={{ background: 'var(--panel-code-bg)', borderRadius: 12, border: '1px solid var(--panel-border)', overflow: 'hidden', minHeight: 0, flex: sourceQuery ? '0 0 auto' : '1 1 auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <div className="analysis-panel-stack" style={{ position: 'relative' }}>
+            <input className="app-input app-input-lg" value={sourceQuery} onChange={(e) => setSourceQuery(e.target.value)} placeholder="원본 코드 검색" style={searchBoxStyle} />
+            <div style={{ background: 'var(--panel-code-bg)', borderRadius: 'var(--control-radius)', border: '1px solid var(--panel-border)', overflow: 'hidden', minHeight: 0, flex: sourceQuery ? '0 0 auto' : '1 1 auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
               <button
+                className="app-btn app-icon-btn"
                 onClick={() => onSelectClass(null)}
                 style={{
                   position: 'absolute',
                   top: '10px',
                   right: '10px',
-                zIndex: 40,
-                cursor: 'pointer',
-                border: '1px solid rgba(148, 163, 184, 0.35)',
-                borderRadius: '999px',
-                backgroundColor: 'var(--panel-bg)',
-                color: 'var(--panel-text)',
-                width: '34px',
-                height: '34px',
-                fontSize: '1rem',
-                fontWeight: '700',
-                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.28)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0,
-                lineHeight: 1,
-              }}
+                  zIndex: 40,
+                }}
                 aria-label="초기 화면으로 닫기"
                 title="초기 화면으로 닫기"
               >
@@ -139,14 +125,13 @@ const SourcePanel = ({ selectedClass, classes, onSelectClass }) => {
 };
 
 const AnalysisPanelWorkspace = (props) => {
-  const { panels, setPanels, currentClasses, selectedClassName, handleSelectClass, handleGoBack, navigationHistory, handleUpdateClass, extension, layoutDir, setLayoutDir, showText, setShowText, maxTextSize, setMaxTextSize, onOpenExport, theme } = props;
+  const { panels, setPanels, currentClasses, selectedClassName, handleSelectClass, handleGoBack, navigationHistory, handleUpdateClass, extension, layoutDir, setLayoutDir, showText, setShowText, maxTextSize, setMaxTextSize, onOpenExport } = props;
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [diagramScript, setDiagramScript] = useState('');
   const [diagramDraft, setDiagramDraft] = useState('');
   const items = useMemo(() => panels.map((panel) => ({ ...panel })), [panels]);
   const addPanel = (type) => setPanels((prev) => [...prev, createPanel(type)]);
   const selectedClass = currentClasses.find((c) => c.name === selectedClassName);
-  const panelColors = getPanelColors(theme);
 
   useEffect(() => {
     if (currentClasses.length > 0) {
@@ -161,18 +146,39 @@ const AnalysisPanelWorkspace = (props) => {
 
   const renderPanel = (item) => {
     if (item.type === 'source') return <SourcePanel selectedClass={selectedClass} classes={currentClasses} onSelectClass={handleSelectClass} />;
-    if (item.type === 'search') return <div style={{ height: '100%', overflow: 'hidden', padding: 0, background: 'var(--panel-bg)', color: 'var(--panel-text)', display: 'flex', flexDirection: 'column', minHeight: 0 }}><ClassSearch classes={currentClasses} onSelectClass={handleSelectClass} /></div>;
-    if (item.type === 'details') return <div style={{ height: '100%', overflow: 'hidden', padding: '12px', background: 'var(--panel-bg)', color: 'var(--panel-text)', display: 'flex', flexDirection: 'column', minHeight: 0 }}><div style={{ marginBottom: 8, flexShrink: 0 }}><ClassSearch classes={currentClasses} onSelectClass={handleSelectClass} /></div><div style={{ flex: 1, minHeight: 0, display: 'flex' }}><ClassDetailView classInfo={selectedClass} onSelectClass={handleSelectClass} extension={extension} onBack={handleGoBack} hasHistory={navigationHistory.length > 0} onUpdate={handleUpdateClass} allClassNames={currentClasses.map((c) => c.name)} /></div></div>;
-    if (item.type === 'diagram') return <div style={{ height: '100%', overflow: 'hidden', padding: 0, background: 'var(--panel-bg)', color: 'var(--panel-text)', display: 'flex', flexDirection: 'column', minHeight: 0 }}><div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><MermaidDiagramDisplay mermaidScript={diagramScript} selectedClassName={selectedClassName} maxTextSize={maxTextSize} setMaxTextSize={setMaxTextSize} onOpenExport={onOpenExport} isRendering={false} setIsRendering={() => {}} layoutDir={layoutDir} setLayoutDir={setLayoutDir} /></div></div>;
+    if (item.type === 'search') return <div className="analysis-panel-shell"><ClassSearch classes={currentClasses} onSelectClass={handleSelectClass} /></div>;
+    if (item.type === 'details') return <div className="analysis-panel-shell"><div style={{ marginBottom: 'var(--panel-gap)', flexShrink: 0 }}><ClassSearch classes={currentClasses} onSelectClass={handleSelectClass} /></div><div style={{ flex: 1, minHeight: 0, display: 'flex' }}><ClassDetailView classInfo={selectedClass} onSelectClass={handleSelectClass} extension={extension} onBack={handleGoBack} hasHistory={navigationHistory.length > 0} onUpdate={handleUpdateClass} allClassNames={currentClasses.map((c) => c.name)} /></div></div>;
+    if (item.type === 'diagram') return <div className="analysis-panel-shell flush"><div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><MermaidDiagramDisplay mermaidScript={diagramScript} selectedClassName={selectedClassName} maxTextSize={maxTextSize} setMaxTextSize={setMaxTextSize} onOpenExport={onOpenExport} isRendering={false} setIsRendering={() => {}} layoutDir={layoutDir} setLayoutDir={setLayoutDir} /></div></div>;
     if (item.type === 'diagramEditor') return <DiagramEditorPanel value={diagramDraft} onChange={setDiagramDraft} onApply={() => setDiagramScript(diagramDraft)} />;
     return null;
   };
 
   return <>
-      <div style={{ width: '100%', height: '100%', minHeight: 0 }}>
-        <GenericPanelLayout items={items} colors={panelColors} renderTabLabel={(item, isActive) => <span style={{ display: 'inline-flex', alignItems: 'center', minHeight: 24, fontSize: 13, lineHeight: '18px', fontWeight: isActive ? 700 : 500, color: isActive ? 'var(--app-primary)' : 'var(--panel-muted)' }}>{item.title}</span>} renderItem={(item) => renderPanel(item)} onAddItem={async () => { setAddModalOpen(true); return undefined; }} onRemoveItem={(item) => setPanels((prev) => prev.filter((panel) => panel.id !== item.id))} labels={{ toVertical: '세로', toHorizontal: '가로' }} maxColumns={4} maxRows={3} />
+      <div style={{ width: '100%', height: '100%', maxHeight: '100%', minHeight: 0, overflow: 'hidden' }}>
+        <GenericPanelLayout items={items} colors={panelColors} renderTabLabel={renderPanelTabLabel} renderItem={(item) => renderPanel(item)} onAddItem={async () => { setAddModalOpen(true); return undefined; }} onRemoveItem={(item) => setPanels((prev) => prev.filter((panel) => panel.id !== item.id))} labels={{ toVertical: '세로', toHorizontal: '가로' }} maxColumns={4} maxRows={3} />
       </div>
-    {addModalOpen && <Modal onClose={() => setAddModalOpen(false)} maxWidth="420px"><div style={{ padding: 24 }}><h3 style={{ marginTop: 0, marginBottom: 12 }}>추가할 패널을 선택하세요</h3><div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>{Object.entries(PANEL_TYPES).map(([key, meta]) => <button key={key} className="secondary-btn" onClick={() => { addPanel(key); setAddModalOpen(false); }}>{meta.title}</button>)}</div></div></Modal>}
+    {addModalOpen && (
+      <Modal
+        onClose={() => setAddModalOpen(false)}
+        maxWidth="420px"
+        title="추가할 패널을 선택하세요"
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+          {Object.entries(PANEL_TYPES).map(([key, meta]) => (
+            <button
+              key={key}
+              className="secondary-btn"
+              onClick={() => {
+                addPanel(key);
+                setAddModalOpen(false);
+              }}
+            >
+              {meta.title}
+            </button>
+          ))}
+        </div>
+      </Modal>
+    )}
   </>;
 };
 

@@ -33,41 +33,60 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
     ...itemBaseStyle,
     display: 'block', // input은 flex 보다는 block/width 100%가 안정적
     border: '1px solid var(--panel-border)',
-    borderRadius: '4px',
+    borderRadius: 'var(--control-radius)',
     backgroundColor: 'var(--panel-bg)',
-    outline: 'none'
+    outline: 'none',
+    minHeight: 'var(--control-height-sm)',
+    height: 'var(--control-height-sm)',
+    padding: '0 8px',
+    color: 'var(--panel-text)',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
   };
 
   // Add 버튼의 높이를 itemBaseStyle과 맞추기 위한 스타일
   const addBtnStyle = {
-    ...itemBaseStyle,
+    minHeight: 'var(--control-height-sm)',
+    height: 'var(--control-height-sm)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 10px',
     fontSize: '0.7rem',
     cursor: 'pointer',
     border: '1px solid var(--panel-border)',
     background: 'var(--panel-bg)',
-    fontWeight: '600'
+    borderRadius: 'var(--control-radius)',
+    color: 'var(--panel-text)',
+    fontWeight: '600',
+    boxShadow: 'var(--control-shadow)',
+    whiteSpace: 'nowrap',
   };
 
   // 삭제(x) 버튼의 통일된 스타일
   const removeBtnStyle = {
-    border: 'none',
-    background: 'none',
+    width: 'var(--control-height-sm)',
+    minWidth: 'var(--control-height-sm)',
+    height: 'var(--control-height-sm)',
+    border: '1px solid var(--panel-border)',
+    borderRadius: 'var(--control-radius)',
+    background: 'var(--panel-bg)',
     cursor: 'pointer',
-    color: '#ef4444',
+    color: 'var(--app-danger)',
     fontWeight: 'bold',
     fontSize: '1.1rem',
-    padding: '0 4px',
+    padding: 0,
     lineHeight: '1',
     display: 'inline-flex',
     alignItems: 'center',
-    height: '26px'
+    justifyContent: 'center',
+    boxShadow: 'var(--control-shadow)',
   };
 
   // 가시성 아이콘/기호 매핑
   const getVisibilityBadge = (v) => {
-    const colors = { public: '#10b981', private: '#ef4444', protected: '#f59e0b', internal: '#6366f1' };
+    const colors = { public: 'var(--app-success)', private: 'var(--app-danger)', protected: 'var(--app-warning)', internal: 'var(--app-info)' };
     const char = { public: '+', private: '-', protected: '#', internal: '~' };
-    return <span style={{ color: colors[v] || '#666', fontWeight: 'bold', marginRight: '8px', fontSize: '1.1rem' }}>{char[v] || '•'}</span>;
+    return <span style={{ color: colors[v] || 'var(--panel-muted)', fontWeight: 'bold', marginRight: '8px', fontSize: '1.1rem' }}>{char[v] || '•'}</span>;
   };
 
   const renderLink = (name) => {
@@ -78,10 +97,10 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
         onClick={() => exists && onSelectClass(name)}
         style={{
           ...itemBaseStyle,
-          background: exists ? '#eff6ff' : 'none',
+          background: exists ? 'var(--app-link-bg)' : 'none',
           border: 'none',
           borderRadius: '4px',
-          color: exists ? '#2563eb' : '#94a3b8',
+          color: exists ? 'var(--app-link-text)' : 'var(--panel-muted)',
           cursor: exists ? 'pointer' : 'default',
         }}
       >
@@ -113,8 +132,8 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
     }}>
       {/* Buttons for navigation and editing */}
       {!data ? (
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '12px 12px 16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="analysis-panel-scroll">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--panel-section-gap)' }}>
             <div style={{
               fontSize: '0.75rem',
               color: 'var(--panel-muted)',
@@ -127,24 +146,19 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-              gap: 10,
+              gap: 'var(--panel-gap)',
               minHeight: 0,
               alignContent: 'start',
             }}>
               {allClassNames.map((name) => (
                 <button
+                  className="app-btn"
                   key={name}
                   onClick={() => onSelectClass(name)}
                   style={{
-                    border: '1px solid var(--panel-border)',
-                    borderRadius: 10,
-                    padding: '12px 14px',
-                    background: 'var(--panel-bg-2)',
-                    color: 'var(--panel-text)',
-                    cursor: 'pointer',
+                    justifyContent: 'flex-start',
+                    minHeight: 44,
                     textAlign: 'left',
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
                   }}
                 >
                   {name}
@@ -157,79 +171,65 @@ const ClassDetailView = ({ classInfo, onSelectClass, onBack, hasHistory, onUpdat
           </div>
         </div>
       ) : (
-        <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '12px 12px 16px' }}>
-          <div style={{
-            position: 'absolute', top: '24px', right: '24px',
-            display: 'flex', gap: '8px', alignItems: 'center',
-            zIndex: 10
-          }}>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              style={{
-                fontSize: '0.8rem', cursor: 'pointer', padding: '6px 12px', borderRadius: '6px',
-                border: 'none', backgroundColor: isEditing ? '#10b981' : '#3b82f6',
-                color: '#fff', fontWeight: '600', transition: 'all 0.2s',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              {isEditing ? '✔ 편집 완료' : '✎ 정보 편집'}
-            </button>
-            <button
-              onClick={onBack}
-              style={{
-                cursor: 'pointer',
-                border: '1px solid var(--panel-border)',
-                borderRadius: '6px',
-                backgroundColor: 'var(--panel-bg)',
-                color: 'var(--panel-muted)',
-                padding: '6px 12px',
-                fontSize: '0.8rem',
-                fontWeight: '600',
-                transition: 'all 0.2s',
-              }}
-            >
-              ← 뒤로
-            </button>
+        <div className="analysis-panel-scroll">
+          <div style={{ marginBottom: 'var(--panel-section-gap)' }}>
+            <ClassDetailHeader
+              data={data}
+              isEditing={isEditing}
+              onUpdate={updateDataAndNotify}
+              onBack={onBack}
+              hasHistory={hasHistory}
+              itemBaseStyle={itemBaseStyle}
+              inputBaseStyle={inputBaseStyle}
+              extension={extension}
+              marginBottom={0}
+              actions={(
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
+              <button
+                className={`app-btn ${isEditing ? '' : 'app-btn-primary'}`}
+                onClick={() => setIsEditing(!isEditing)}
+                style={isEditing ? { backgroundColor: 'var(--app-success)', borderColor: 'var(--app-success)', color: 'var(--app-on-accent)' } : undefined}
+              >
+                {isEditing ? '✔ 편집 완료' : '✎ 정보 편집'}
+              </button>
+              <button
+                className="app-btn"
+                onClick={onBack}
+              >
+                ← 뒤로
+              </button>
+                </div>
+              )}
+            />
           </div>
-
-          <div className="internal-split-layout" style={{ flex: 1, overflow: 'visible', minHeight: 0, padding: '12px 12px 8px', alignItems: 'stretch' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'visible', minHeight: 0 }}>
-              <ClassDetailHeader
-                data={data}
-                isEditing={isEditing}
-                onUpdate={updateDataAndNotify}
-                onBack={onBack}
-                hasHistory={hasHistory}
-                itemBaseStyle={itemBaseStyle}
-                inputBaseStyle={inputBaseStyle}
-                extension={extension}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0, overflow: 'visible' }}>
-                <ClassDetailRelations
-                  data={data}
-                  isEditing={isEditing}
-                  onUpdate={updateDataAndNotify}
-                  allClassNames={allClassNames}
-                  extension={extension}
-                  itemBaseStyle={itemBaseStyle}
-                  inputBaseStyle={inputBaseStyle}
-                  addBtnStyle={addBtnStyle}
-                  removeBtnStyle={removeBtnStyle}
-                  renderLink={renderLink}
-                />
-                <ClassDetailMembers
-                  data={data}
-                  isEditing={isEditing}
-                  onUpdate={updateDataAndNotify}
-                  itemBaseStyle={itemBaseStyle}
-                  inputBaseStyle={inputBaseStyle}
-                  addBtnStyle={addBtnStyle}
-                  removeBtnStyle={removeBtnStyle}
-                  getVisibilityBadge={getVisibilityBadge}
-                />
+            <div className="internal-split-layout" style={{ flex: 1, overflow: 'visible', minHeight: 0, padding: 'var(--panel-space) var(--panel-space) 8px', alignItems: 'stretch' }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'visible', minHeight: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--panel-gap)', flex: 1, minHeight: 0, overflow: 'visible' }}>
+                  <ClassDetailRelations
+                    data={data}
+                    isEditing={isEditing}
+                    onUpdate={updateDataAndNotify}
+                    allClassNames={allClassNames}
+                    extension={extension}
+                    itemBaseStyle={itemBaseStyle}
+                    inputBaseStyle={inputBaseStyle}
+                    addBtnStyle={addBtnStyle}
+                    removeBtnStyle={removeBtnStyle}
+                    renderLink={renderLink}
+                  />
+                  <ClassDetailMembers
+                    data={data}
+                    isEditing={isEditing}
+                    onUpdate={updateDataAndNotify}
+                    itemBaseStyle={itemBaseStyle}
+                    inputBaseStyle={inputBaseStyle}
+                    addBtnStyle={addBtnStyle}
+                    removeBtnStyle={removeBtnStyle}
+                    getVisibilityBadge={getVisibilityBadge}
+                  />
+                </div>
               </div>
             </div>
-          </div>
         </div>
       )}
     </div>

@@ -105,18 +105,22 @@ const MermaidRenderer = ({ mermaidScript, isRendering, setIsRendering, selectedC
   };
 
   const btnStyle = {
-    padding: '8px 14px',
+    minHeight: 'var(--control-height-md)',
+    padding: '0 14px',
     backgroundColor: 'var(--panel-bg)',
     border: '1px solid var(--panel-border)',
-    borderRadius: '6px',
+    borderRadius: 'var(--control-radius)',
     cursor: 'pointer',
-    fontSize: '0.85rem',
+    fontSize: '0.875rem',
     fontWeight: '600',
     color: 'var(--panel-text)',
     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     display: 'flex',
     alignItems: 'center',
-    gap: '4px'
+    justifyContent: 'center',
+    gap: '6px',
+    boxShadow: 'var(--control-shadow)',
+    whiteSpace: 'nowrap',
   };
 
   const hideScrollbarStyle = {

@@ -10,7 +10,7 @@ const CodeInput = ({ extension, setExtension, code, setCode, onAnalyze, onLoadSa
       }}>
         <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
           <label>언어 선택: </label>
-          <select value={extension} onChange={(e) => setExtension(e.target.value)} style={{ background: 'var(--panel-bg)', color: 'var(--panel-text)', border: '1px solid var(--panel-border)', borderRadius: '4px' }}>
+          <select className="app-select" value={extension} onChange={(e) => setExtension(e.target.value)} style={{ width: 'auto' }}>
             <option value="js">JavaScript</option>
             <option value="java">Java</option>
             <option value="py">Python</option>
@@ -22,10 +22,10 @@ const CodeInput = ({ extension, setExtension, code, setCode, onAnalyze, onLoadSa
 
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={onAnalyze} style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: 'var(--app-primary)', color: 'white', border: 'none', borderRadius: '4px' }}>
+          <button className="app-btn app-btn-primary" onClick={onAnalyze}>
             다이어그램 생성
           </button>
-          <button onClick={onLoadSample} style={{ padding: '10px 20px', backgroundColor: 'var(--panel-bg-2)', color: 'var(--panel-text)', border: '1px solid var(--panel-border)', borderRadius: '4px' }}>
+          <button className="app-btn" onClick={onLoadSample}>
             샘플 로드
           </button>
         </div>
@@ -33,9 +33,10 @@ const CodeInput = ({ extension, setExtension, code, setCode, onAnalyze, onLoadSa
       <div
         style={{ width: '100%', display: 'flex' }}>
         <textarea
+          className="app-textarea app-textarea-code"
           rows="12"
           wrap="soft"
-          style={{ flex: 1, padding: '10px', fontFamily: 'monospace', borderRadius: '4px', border: '1px solid var(--panel-border)', background: 'var(--panel-bg)', color: 'var(--panel-text)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', overflowX: 'hidden', boxSizing: 'border-box' }}
+          style={{ flex: 1 }}
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="여기에 코드를 입력하세요 (여러 클래스 가능)..."

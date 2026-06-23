@@ -22,25 +22,6 @@ const ControlPanel = ({ layoutDir, setLayoutDir, showText, setShowText }) => {
           transform: translateY(-1px);
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .control-select {
-          padding: 6px 12px;
-          border-radius: 8px;
-          border: 1px solid var(--panel-border);
-          background-color: var(--panel-bg);
-          font-size: 0.85rem;
-          font-weight: 500;
-          color: var(--panel-text);
-          outline: none;
-          cursor: pointer;
-          transition: border-color 0.2s;
-        }
-        .control-select:hover {
-          border-color: var(--app-primary);
-        }
-        .control-select:focus {
-          border-color: var(--app-primary);
-          box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary) 18%, transparent);
-        }
       `}</style>
       <div style={{ 
         display: 'flex', 
@@ -64,9 +45,10 @@ const ControlPanel = ({ layoutDir, setLayoutDir, showText, setShowText }) => {
             레이아웃 방향
           </label>
           <select 
-            className="control-select"
+            className="app-select"
             value={layoutDir} 
             onChange={(e) => setLayoutDir(e.target.value)}
+            style={{ width: 'auto' }}
           >
             <option value="TB">상하 (Top-Bottom)</option>
             <option value="LR">좌우 (Left-Right)</option>

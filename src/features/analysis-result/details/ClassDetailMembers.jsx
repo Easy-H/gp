@@ -44,14 +44,14 @@ const ClassDetailMembers = ({
   return (
     <section>
       <h4 style={{ fontSize: '0.75rem', color: 'var(--panel-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px', borderBottom: '1px solid var(--panel-border)', paddingBottom: '8px' }}>Members</h4>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--panel-section-gap) * 2)' }}>
         {/* Fields */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <strong style={{ fontSize: '0.9rem', color: 'var(--panel-text)' }}>필드 (Fields)</strong>
             {isEditing && <button onClick={addField} style={addBtnStyle}>+ Add</button>}
           </div>
-          <div style={{ backgroundColor: 'var(--panel-bg-2)', padding: '12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ backgroundColor: 'var(--panel-bg-2)', padding: 'var(--panel-space)', borderRadius: 'var(--control-radius)', display: 'flex', flexDirection: 'column', gap: 'var(--panel-gap)' }}>
             {data.fields.length === 0 && <div style={{ fontSize: '0.85rem', color: 'var(--panel-muted)', textAlign: 'center', padding: '4px 0' }}>정의된 필드가 없습니다.</div>}
             {data.fields.map((f, i) => (
               <div key={i}>
@@ -88,7 +88,7 @@ const ClassDetailMembers = ({
             <strong style={{ fontSize: '0.9rem', color: 'var(--panel-text)' }}>메서드 (Methods)</strong>
             {isEditing && <button onClick={addMethod} style={addBtnStyle}>+ Add</button>}
           </div>
-          <div style={{ backgroundColor: 'var(--panel-bg-2)', padding: '12px', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ backgroundColor: 'var(--panel-bg-2)', padding: 'var(--panel-space)', borderRadius: 'var(--control-radius)', display: 'flex', flexDirection: 'column', gap: 'var(--panel-gap)' }}>
             {data.methods.length === 0 && <div style={{ fontSize: '0.85rem', color: 'var(--panel-muted)', textAlign: 'center', padding: '4px 0' }}>정의된 메서드가 없습니다.</div>}
             {data.methods.map((m, i) => (
               <div key={i}>

@@ -1,5 +1,3 @@
-import React from 'react';
-
 const GitFolderUpload = ({ onUpload, onRemoteAnalyze, gitUrl, setGitUrl, isProcessing, processingStatus }) => {
   const handleChange = (e) => {
     const files = Array.from(e.target.files);
@@ -63,6 +61,7 @@ const GitFolderUpload = ({ onUpload, onRemoteAnalyze, gitUrl, setGitUrl, isProce
           </div>
         </div>
       )}
+
     </div>
   );
 };

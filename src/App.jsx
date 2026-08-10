@@ -11,6 +11,13 @@ import AnalysisModal from './components/AnalysisModal';
 import ExportModal from './components/ExportModal';
 import AppStyles from './components/AppStyles';
 import AnalysisPanelWorkspace from './features/analysis-result/AnalysisPanelWorkspace';
+import GitHistoryWorkspace from './components/GitHistoryWorkspace';
+
+const getInitialAnalysisType = () => {
+  if (typeof window === 'undefined') return 'classDiagram';
+  const value = new URLSearchParams(window.location.search).get('analysisType');
+  return value === 'gitHistory' ? 'gitHistory' : 'classDiagram';
+};
 
 const App = () => {
   const {
@@ -24,6 +31,7 @@ const App = () => {
     { id: 'details-1', type: 'details', title: '상세' },
     { id: 'diagram-1', type: 'diagram', title: '다이어그램' },
   ]);
+  const [analysisType, setAnalysisType] = useState(getInitialAnalysisType);
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'light';
     return window.localStorage.getItem('notation-theme') || 'light';
@@ -137,6 +145,32 @@ const App = () => {
     window.localStorage.setItem('notation-theme', theme);
   }, [theme]);
 
+  const handleChangeAnalysisType = (nextType) => {
+    setAnalysisType(nextType);
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (nextType === 'classDiagram') {
+      url.searchParams.delete('analysisType');
+    } else {
+      url.searchParams.set('analysisType', nextType);
+    }
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  };
+
+  const handleGitUrlChange = (nextUrl) => {
+    setGitUrl(nextUrl);
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (nextUrl) url.searchParams.set('gitUrl', nextUrl);
+    else url.searchParams.delete('gitUrl');
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  };
+
+  const handleRemoteGitAnalysisWithUrl = (url) => {
+    handleGitUrlChange(url);
+    return handleRemoteGitAnalysis(url);
+  };
+
   return (
     <div style={{ padding: 0, margin: 0, width: '100%', minHeight: 0, height: '100dvh', maxHeight: '100dvh', overflow: 'hidden', backgroundColor: 'var(--app-bg)', color: 'var(--app-text)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
       <AppStyles />
@@ -147,17 +181,19 @@ const App = () => {
           onOpenAnalysis={() => setShowAnalysisModal(true)}
           theme={theme}
           onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+          analysisType={analysisType}
+          onChangeAnalysisType={handleChangeAnalysisType}
         />
 
         <AnalysisModal
-          isOpen={showAnalysisModal}
+          isOpen={analysisType === 'classDiagram' && showAnalysisModal}
           onClose={() => !isProcessing && setShowAnalysisModal(false)}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           isProcessing={isProcessing}
           processingStatus={processingStatus}
           gitUrl={gitUrl}
-          setGitUrl={setGitUrl}
+          setGitUrl={handleGitUrlChange}
           extension={extension}
           setExtension={setExtension}
           code={code}
@@ -165,33 +201,37 @@ const App = () => {
           onAnalyze={() => handleAnalyze(code, extension)}
           onLoadSample={handleLoadSample}
           onZipUpload={handleZipUpload}
-          onRemoteAnalyze={handleRemoteGitAnalysis}
+          onRemoteAnalyze={handleRemoteGitAnalysisWithUrl}
           onGitUpload={handleGitDirectoryAnalysis}
         />
 
         <div style={{ marginTop: 0, flex: 1, minHeight: 0, maxHeight: '100%', display: 'flex', overflow: 'hidden' }}>
-        <AnalysisPanelWorkspace
-          panels={panels}
-          setPanels={setPanels}
-          theme={theme}
-          currentClasses={currentClasses}
-            selectedClassName={selectedClassName}
-            handleSelectClass={handleSelectClass}
-            handleGoBack={handleGoBack}
-            navigationHistory={navigationHistory}
-            handleUpdateClass={handleUpdateClass}
-            extension={extension}
-            layoutDir={layoutDir}
-            setLayoutDir={setLayoutDir}
-            showText={showText}
-            setShowText={setShowText}
-            maxTextSize={maxTextSize}
-            setMaxTextSize={setMaxTextSize}
-            onOpenExport={() => setShowExportModal(true)}
-          />
+          {analysisType === 'gitHistory' ? (
+            <GitHistoryWorkspace />
+          ) : (
+            <AnalysisPanelWorkspace
+              panels={panels}
+              setPanels={setPanels}
+              theme={theme}
+              currentClasses={currentClasses}
+              selectedClassName={selectedClassName}
+              handleSelectClass={handleSelectClass}
+              handleGoBack={handleGoBack}
+              navigationHistory={navigationHistory}
+              handleUpdateClass={handleUpdateClass}
+              extension={extension}
+              layoutDir={layoutDir}
+              setLayoutDir={setLayoutDir}
+              showText={showText}
+              setShowText={setShowText}
+              maxTextSize={maxTextSize}
+              setMaxTextSize={setMaxTextSize}
+              onOpenExport={() => setShowExportModal(true)}
+            />
+          )}
 
           <ExportModal
-            isOpen={showExportModal}
+            isOpen={analysisType === 'classDiagram' && showExportModal}
             onClose={() => setShowExportModal(false)}
             onExportData={exportData}
             onExportPng={handlePngExport}

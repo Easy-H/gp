@@ -1,6 +1,12 @@
 import React from 'react';
 
-const AppHeader = ({ onOpenExport, onOpenAnalysis, theme, onToggleTheme }) => {
+const AppHeader = ({ onOpenExport, onOpenAnalysis, theme, onToggleTheme, analysisType, onChangeAnalysisType }) => {
+  const modeButtonStyle = (mode) => ({
+    backgroundColor: analysisType === mode ? 'var(--app-link-bg)' : 'transparent',
+    color: analysisType === mode ? 'var(--app-link-text)' : 'var(--app-text)',
+    boxShadow: 'none',
+  });
+
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between',
@@ -15,7 +21,23 @@ const AppHeader = ({ onOpenExport, onOpenAnalysis, theme, onToggleTheme }) => {
       <div style={{ fontSize: '1.5rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px', lineHeight: 1 }}>
         <span style={{ color: 'var(--app-text)', letterSpacing: '-0.02em' }}>Notation</span>
       </div>
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'inline-flex', border: '1px solid var(--app-border)', borderRadius: 'var(--control-radius)', overflow: 'hidden', background: 'var(--app-surface)' }}>
+          <button
+            className="app-btn app-btn-sm"
+            style={{ ...modeButtonStyle('classDiagram'), border: 0, borderRadius: 0 }}
+            onClick={() => onChangeAnalysisType('classDiagram')}
+          >
+            클래스
+          </button>
+          <button
+            className="app-btn app-btn-sm"
+            style={{ ...modeButtonStyle('gitHistory'), border: 0, borderRadius: 0 }}
+            onClick={() => onChangeAnalysisType('gitHistory')}
+          >
+            히스토리
+          </button>
+        </div>
         <button
           className="app-btn app-icon-btn"
           onClick={onToggleTheme}
@@ -24,18 +46,22 @@ const AppHeader = ({ onOpenExport, onOpenAnalysis, theme, onToggleTheme }) => {
         >
           {theme === 'dark' ? '☀' : '☾'}
         </button>
-        <button
-          className="app-btn app-icon-btn"
-          onClick={onOpenExport}
-          title="저장 및 내보내기"
-          aria-label="저장 및 내보내기"
-        >⇩</button>
-        <button
-          className="app-btn app-btn-primary app-icon-btn-lg"
-          onClick={onOpenAnalysis}
-          title="새 프로젝트 분석하기"
-          aria-label="새 프로젝트 분석하기"
-        >＋</button>
+        {analysisType === 'classDiagram' && (
+          <>
+            <button
+              className="app-btn app-icon-btn"
+              onClick={onOpenExport}
+              title="저장 및 내보내기"
+              aria-label="저장 및 내보내기"
+            >⇩</button>
+            <button
+              className="app-btn app-btn-primary app-icon-btn-lg"
+              onClick={onOpenAnalysis}
+              title="새 프로젝트 분석하기"
+              aria-label="새 프로젝트 분석하기"
+            >＋</button>
+          </>
+        )}
       </div>
     </div>
   );
